@@ -3,14 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Help Hand - Creator & Volunteer Sync</title>
+    <title>Help Hand - Multilingual MVP</title>
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
         :root {
             --primary: #4776E6;
             --primary-gradient: linear-gradient(135deg, #4776E6 0%, #8E54E9 100%);
-            --success: #00b894;
             --bg: #F8F9FD;
             --card: #FFFFFF;
             --text-main: #2d3436;
@@ -21,216 +20,202 @@
         * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body { font-family: 'Manrope', sans-serif; background: var(--bg); color: var(--text-main); }
 
-        .app-container { max-width: 480px; margin: 0 auto; min-height: 100vh; padding-bottom: 90px; }
-
-        header {
-            padding: 20px; display: flex; justify-content: space-between; align-items: center;
-            background: var(--bg); position: sticky; top: 0; z-index: 1000;
+        /* Auth Screen */
+        #authScreen {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--primary-gradient); z-index: 3000;
+            display: flex; flex-direction: column; justify-content: center; padding: 40px; color: white;
         }
-        .logo { font-weight: 800; font-size: 1.4rem; background: var(--primary-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
 
+        .auth-card { background: white; padding: 30px; border-radius: 24px; color: var(--text-main); }
+        .lang-selector { display: flex; gap: 5px; margin-bottom: 20px; justify-content: center; }
+        .lang-btn { padding: 5px 12px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.3); color: white; cursor: pointer; font-size: 0.7rem; }
+        .lang-btn.active { background: white; color: var(--primary); font-weight: 800; }
+
+        .role-selector { display: flex; gap: 10px; margin: 15px 0; }
+        .role-btn { flex: 1; padding: 12px; border: 2px solid #eee; border-radius: 12px; cursor: pointer; text-align: center; font-weight: 700; font-size: 0.8rem; }
+        .role-btn.active { border-color: var(--primary); background: #f0f3ff; color: var(--primary); }
+
+        /* Main Layout */
+        .app-container { max-width: 480px; margin: 0 auto; min-height: 100vh; padding-bottom: 90px; display: none; }
+        header { padding: 20px; display: flex; justify-content: space-between; align-items: center; background: var(--bg); position: sticky; top: 0; z-index: 1000; }
+        
         .screen { display: none; padding: 0 20px; animation: fadeIn 0.3s ease; }
         .screen.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* Форма создания */
-        .form-group { margin-bottom: 15px; }
-        label { display: block; font-size: 0.8rem; font-weight: 700; margin-bottom: 5px; color: var(--text-sub); }
-        input, textarea, select {
-            width: 100%; padding: 12px; border-radius: 12px; border: 1px solid #eee;
-            font-family: inherit; font-size: 0.9rem; outline: none;
-        }
-        textarea { height: 100px; resize: none; }
+        input, textarea { width: 100%; padding: 12px; border-radius: 12px; border: 1px solid #eee; margin-bottom: 10px; font-family: inherit; }
+        .btn-main { background: var(--primary-gradient); color: white; border: none; width: 100%; padding: 15px; border-radius: 15px; font-weight: 700; cursor: pointer; }
 
-        /* Модули выбора */
-        .module-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 15px; }
-        .module-opt {
-            background: white; padding: 10px; border-radius: 12px; text-align: center;
-            border: 2px solid transparent; cursor: pointer; font-size: 0.7rem; font-weight: 700; box-shadow: var(--shadow);
-        }
-        .module-opt.selected { border-color: var(--primary); background: #f0f3ff; }
-
-        /* Карточки */
-        .req-card {
-            background: var(--card); padding: 16px; border-radius: 20px; margin-bottom: 12px;
-            display: flex; gap: 15px; box-shadow: var(--shadow); position: relative;
-        }
-        .req-icon { width: 45px; height: 45px; border-radius: 12px; background: #f0f3ff; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; }
-        .status-badge { position: absolute; top: 15px; right: 15px; font-size: 0.6rem; padding: 3px 8px; border-radius: 8px; font-weight: 800; }
-        
-        /* Кнопки */
-        .btn-main {
-            background: var(--primary-gradient); color: white; border: none; width: 100%;
-            padding: 15px; border-radius: 15px; font-weight: 700; cursor: pointer; margin-top: 10px;
-        }
-
-        nav {
-            position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
-            width: 100%; max-width: 480px; background: white;
-            display: flex; justify-content: space-around; padding: 12px 0 25px;
-            border-top: 1px solid #eee; z-index: 1000;
-        }
-        .nav-link { text-align: center; color: #b2bec3; font-size: 0.6rem; font-weight: 700; cursor: pointer; }
+        nav { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 480px; background: white; display: flex; justify-content: space-around; padding: 12px 0 25px; border-top: 1px solid #eee; z-index: 1000; }
+        .nav-link { text-align: center; color: #b2bec3; font-size: 0.6rem; font-weight: 700; cursor: pointer; transition: 0.3s; }
         .nav-link.active { color: var(--primary); }
-        .nav-link i { font-size: 1.3rem; display: block; margin-bottom: 2px; }
+        .nav-link i { font-size: 1.3rem; display: block; }
+
+        .req-card { background: var(--card); padding: 16px; border-radius: 20px; margin-bottom: 12px; display: flex; gap: 15px; box-shadow: var(--shadow); }
     </style>
 </head>
 <body>
 
-<div class="app-container">
+<div id="authScreen">
+    <div class="lang-selector">
+        <div class="lang-btn active" onclick="changeLang('ru', this)">RU</div>
+        <div class="lang-btn" onclick="changeLang('kz', this)">KZ</div>
+        <div class="lang-btn" onclick="changeLang('en', this)">EN</div>
+    </div>
+    <h1 style="text-align:center; margin-bottom: 30px; letter-spacing: -1px;" id="authTitle">Help Hand</h1>
+    
+    <div class="auth-card">
+        <label id="lblEnterName" style="font-weight: 800; font-size: 0.8rem;">Как вас зовут?</label>
+        <input type="text" id="regName" placeholder="...">
+        
+        <label id="lblWhoAreYou" style="font-weight: 800; font-size: 0.8rem; margin-top: 10px; display: block;">Кто вы?</label>
+        <div class="role-selector">
+            <div class="role-btn active" id="btnRoleVol" onclick="setRole('volunteer', this)">Волонтер</div>
+            <div class="role-btn" id="btnRoleCre" onclick="setRole('creator', this)">Заказчик</div>
+        </div>
+        
+        <button class="btn-main" id="btnStart" onclick="handleAuth()">Начать</button>
+    </div>
+</div>
+
+<div class="app-container" id="mainApp">
     <header>
-        <div class="logo">Help Hand</div>
-        <div style="font-size: 0.7rem; font-weight: 800; color: var(--success)">ONLINE</div>
+        <div style="font-weight: 900; font-size: 1.2rem; color: var(--primary);">Help Hand</div>
+        <div id="userBadge" style="font-size: 0.6rem; font-weight: 800; padding: 4px 10px; background: #e0e7ff; border-radius: 8px;"></div>
     </header>
 
     <div id="home" class="screen active">
-        <h3 style="margin-bottom:15px;">Задания в городе</h3>
+        <h3 style="margin-bottom:15px;" id="txtFeedTitle">Задания рядом</h3>
         <div id="feedContainer"></div>
     </div>
 
-    <div id="map" class="screen" style="padding:0; height:75vh;">
-        <div id="mapDisplay" style="width:100%; height:100%;"></div>
-    </div>
-
     <div id="create" class="screen">
-        <h3 style="margin-bottom:20px;">Новая просьба</h3>
-        
-        <label>Выберите категорию (Модуль)</label>
-        <div class="module-grid">
-            <div class="module-opt selected" onclick="selectModule('Быт', '🏠', this)">🏠<br>Быт</div>
-            <div class="module-opt" onclick="selectModule('Здоровье', '💊', this)">💊<br>Здоровье</div>
-            <div class="module-opt" onclick="selectModule('Транспорт', '🚗', this)">🚗<br>Трансп.</div>
-        </div>
-
-        <div class="form-group">
-            <label>Что нужно сделать?</label>
-            <input type="text" id="taskTitle" placeholder="Напр: Купить хлеб">
-        </div>
-
-        <div class="form-group">
-            <label>Подробности</label>
-            <textarea id="taskDesc" placeholder="Опишите детали здесь..."></textarea>
-        </div>
-
-        <button class="btn-main" onclick="createNewTask()">Опубликовать на карте</button>
+        <h3 style="margin-bottom:20px;" id="txtCreateTitle">Новая просьба</h3>
+        <input type="text" id="taskTitle" placeholder="">
+        <textarea id="taskDesc" placeholder=""></textarea>
+        <button class="btn-main" id="btnPublish" onclick="createNewTask()">Опубликовать</button>
     </div>
 
     <div id="profile" class="screen">
-        <div class="user-info" style="display:flex; align-items:center; gap:15px; margin-bottom:25px;">
-            <div style="width:50px; height:50px; border-radius:50%; background:#eee; overflow:hidden;">
-                <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Nurasyl" style="width:100%">
-            </div>
-            <div><h2>Нурасыл</h2><p style="font-size:0.7rem; color:var(--text-sub)">Рейтинг: 5.0 ⭐</p></div>
+        <div class="user-info" style="display:flex; align-items:center; gap:15px; margin-bottom:20px;">
+            <div id="profileAvatar" style="width:50px; height:50px; border-radius:50%; background:#eee; overflow:hidden;"></div>
+            <div><h2 id="displayProfileName">Name</h2><p id="displayProfileRole" style="font-size:0.7rem; color:var(--text-sub)"></p></div>
         </div>
-        
-        <h4 style="margin-bottom:10px;">Мои заказы</h4>
-        <div id="myRequestsContainer"></div>
-        
-        <h4 style="margin-top:20px; margin-bottom:10px;">Я помогаю</h4>
-        <div id="myHelpContainer"></div>
+        <button class="btn-main" style="background: #f1f2f6; color: #2d3436;" onclick="location.reload()" id="btnLogout">Выйти</button>
     </div>
 
     <nav>
-        <div class="nav-link active" onclick="showScreen('home', this)"><i>📋</i><span>Лента</span></div>
-        <div class="nav-link" onclick="showScreen('map', this); initMap();"><i>📍</i><span>Карта</span></div>
-        <div class="nav-link" onclick="showScreen('create', this)"><i>➕</i><span>Создать</span></div>
-        <div class="nav-link" onclick="showScreen('profile', this)"><i>👤</i><span>Профиль</span></div>
+        <div class="nav-link active" onclick="showScreen('home', this)"><i id="iconHome">📋</i><span id="navHome">Лента</span></div>
+        <div class="nav-link" id="navCreateBtn" onclick="showScreen('create', this)"><i id="iconCreate">➕</i><span id="navCreate">Создать</span></div>
+        <div class="nav-link" onclick="showScreen('profile', this)"><i id="iconProfile">👤</i><span id="navProfile">Профиль</span></div>
     </nav>
 </div>
 
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
-    // Исходные данные
-    let taskData = [
-        { id: 1, lat: 45.015, lng: 78.373, cat: "Быт", title: "Вынести мусор", desc: "6 этаж", icon: "🏠", owner: "System" }
-    ];
-    let myHelp = []; // Задания, за которые я взялся
-    let selectedCat = "Быт";
-    let selectedIcon = "🏠";
+    let currentLang = 'ru';
+    let currentUser = { name: "", role: "volunteer" };
+    
+    const translations = {
+        ru: {
+            authTitle: "Help Hand", lblEnterName: "Как вас зовут?", lblWhoAreYou: "Кто вы?", 
+            btnRoleVol: "Волонтер", btnRoleCre: "Заказчик", btnStart: "Начать",
+            txtFeedTitle: "Задания рядом", txtCreateTitle: "Новая просьба", btnPublish: "Опубликовать",
+            navHome: "Лента", navCreate: "Создать", navProfile: "Профиль", btnLogout: "Выйти",
+            badgeVol: "ВОЛОНТЕР", badgeCre: "ЗАКАЗЧИК", welcome: "Добро пожаловать", 
+            phTitle: "Что нужно сделать?", phDesc: "Детали и адрес...", from: "От"
+        },
+        kz: {
+            authTitle: "Help Hand", lblEnterName: "Есіміңіз кім?", lblWhoAreYou: "Сіз кімсіз?", 
+            btnRoleVol: "Волонтер", btnRoleCre: "Тапсырыс беруші", btnStart: "Бастау",
+            txtFeedTitle: "Жақын жердегі тапсырмалар", txtCreateTitle: "Жаңа өтініш", btnPublish: "Жариялау",
+            navHome: "Таспа", navCreate: "Қосу", navProfile: "Профиль", btnLogout: "Шығу",
+            badgeVol: "ВОЛОНТЕР", badgeCre: "ТАПСЫРЫСШЫ", welcome: "Қош келдіңіз",
+            phTitle: "Не істеу керек?", phDesc: "Толығырақ және мекен-жайы...", from: "Кімнен"
+        },
+        en: {
+            authTitle: "Help Hand", lblEnterName: "What's your name?", lblWhoAreYou: "Who are you?", 
+            btnRoleVol: "Volunteer", btnRoleCre: "Customer", btnStart: "Start",
+            txtFeedTitle: "Tasks nearby", txtCreateTitle: "New request", btnPublish: "Post",
+            navHome: "Feed", navCreate: "Create", navProfile: "Profile", btnLogout: "Logout",
+            badgeVol: "VOLUNTEER", badgeCre: "CUSTOMER", welcome: "Welcome",
+            phTitle: "What needs to be done?", phDesc: "Details and address...", from: "From"
+        }
+    };
 
-    function selectModule(cat, icon, el) {
-        document.querySelectorAll('.module-opt').forEach(opt => opt.classList.remove('selected'));
-        el.classList.add('selected');
-        selectedCat = cat;
-        selectedIcon = icon;
+    function changeLang(lang, el) {
+        currentLang = lang;
+        document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
+        el.classList.add('active');
+        applyTranslations();
     }
 
+    function applyTranslations() {
+        const t = translations[currentLang];
+        document.getElementById('lblEnterName').innerText = t.lblEnterName;
+        document.getElementById('lblWhoAreYou').innerText = t.lblWhoAreYou;
+        document.getElementById('btnRoleVol').innerText = t.btnRoleVol;
+        document.getElementById('btnRoleCre').innerText = t.btnRoleCre;
+        document.getElementById('btnStart').innerText = t.btnStart;
+        document.getElementById('txtFeedTitle').innerText = t.txtFeedTitle;
+        document.getElementById('txtCreateTitle').innerText = t.txtCreateTitle;
+        document.getElementById('btnPublish').innerText = t.btnPublish;
+        document.getElementById('navHome').innerText = t.navHome;
+        document.getElementById('navCreate').innerText = t.navCreate;
+        document.getElementById('navProfile').innerText = t.navProfile;
+        document.getElementById('btnLogout').innerText = t.btnLogout;
+        document.getElementById('taskTitle').placeholder = t.phTitle;
+        document.getElementById('taskDesc').placeholder = t.phDesc;
+        
+        if(currentUser.name) {
+            document.getElementById('userBadge').innerText = currentUser.role === 'volunteer' ? t.badgeVol : t.badgeCre;
+        }
+    }
+
+    function setRole(role, el) {
+        document.querySelectorAll('.role-btn').forEach(b => b.classList.remove('active'));
+        el.classList.add('active');
+        currentUser.role = role;
+    }
+
+    function handleAuth() {
+        const name = document.getElementById('regName').value;
+        if(!name) return alert(currentLang === 'kz' ? "Есіміңізді жазыңыз" : "Введите имя");
+        
+        currentUser.name = name;
+        document.getElementById('displayProfileName').innerText = name;
+        document.getElementById('profileAvatar').innerHTML = `<img src="https://api.dicebear.com/7.x/avataaars/svg?seed=${name}" style="width:100%">`;
+
+        if(currentUser.role === 'volunteer') document.getElementById('navCreateBtn').style.display = 'none';
+
+        applyTranslations();
+        document.getElementById('authScreen').style.display = 'none';
+        document.getElementById('mainApp').style.display = 'block';
+        renderFeed();
+    }
+
+    let taskData = [{ id: 1, title: "Help with groceries", owner: "Aruzhan" }];
+
     function renderFeed() {
+        const t = translations[currentLang];
         const container = document.getElementById('feedContainer');
         container.innerHTML = taskData.map(task => `
-            <div class="req-card" onclick="takeTask(${task.id})">
-                <div class="req-icon">${task.icon}</div>
-                <div class="req-content">
-                    <div class="req-title">${task.title}</div>
-                    <div class="req-meta">${task.cat} • Нажмите чтобы помочь</div>
+            <div class="req-card">
+                <div style="font-size:1.5rem">📦</div>
+                <div>
+                    <div style="font-weight:800; font-size:0.9rem">${task.title}</div>
+                    <div style="font-size:0.7rem; color:var(--text-sub)">${t.from}: ${task.owner}</div>
                 </div>
             </div>
-        `).reverse().join(''); // Новые сверху
+        `).reverse().join('');
     }
 
     function createNewTask() {
         const title = document.getElementById('taskTitle').value;
-        const desc = document.getElementById('taskDesc').value;
-        
-        if(!title) return alert("Введите название!");
-
-        const newTask = {
-            id: Date.now(),
-            lat: 45.015 + (Math.random() - 0.5) * 0.01, // Рандомно рядом в Талдыкоргане
-            lng: 78.373 + (Math.random() - 0.5) * 0.01,
-            cat: selectedCat,
-            title: title,
-            desc: desc,
-            icon: selectedIcon,
-            owner: "Me"
-        };
-
-        taskData.push(newTask);
+        if(!title) return;
+        taskData.push({ id: Date.now(), title: title, owner: currentUser.name });
         renderFeed();
-        renderMyRequests();
-        alert("Задание опубликовано!");
         showScreen('home', document.querySelector('nav div:first-child'));
-        
-        // Очистка формы
-        document.getElementById('taskTitle').value = "";
-        document.getElementById('taskDesc').value = "";
-    }
-
-    function takeTask(id) {
-        const task = taskData.find(t => t.id === id);
-        if(task.owner === "Me") return alert("Это ваше собственное задание!");
-        if(!myHelp.find(t => t.id === id)) {
-            myHelp.push(task);
-            alert("Вы взялись за помощь!");
-            renderMyHelp();
-        }
-    }
-
-    function renderMyRequests() {
-        const container = document.getElementById('myRequestsContainer');
-        const mine = taskData.filter(t => t.owner === "Me");
-        container.innerHTML = mine.length ? mine.map(t => `
-            <div class="req-card" style="border-left: 4px solid var(--primary)">
-                <div class="req-icon">${t.icon}</div>
-                <div class="req-content">
-                    <div class="req-title">${t.title}</div>
-                    <div class="req-meta">Ожидает волонтера</div>
-                </div>
-            </div>
-        `).join('') : '<p style="font-size:0.7rem; color:#999;">Вы еще ничего не просили</p>';
-    }
-
-    function renderMyHelp() {
-        const container = document.getElementById('myHelpContainer');
-        container.innerHTML = myHelp.map(t => `
-            <div class="req-card" style="border-left: 4px solid var(--success)">
-                <div class="req-icon">${t.icon}</div>
-                <div class="req-content">
-                    <div class="req-title">${t.title}</div>
-                    <div class="req-meta">В процессе</div>
-                </div>
-            </div>
-        `).join('') || '<p style="font-size:0.7rem; color:#999;">Пока нет активной помощи</p>';
     }
 
     function showScreen(id, el) {
@@ -240,18 +225,8 @@
         el.classList.add('active');
     }
 
-    let map;
-    function initMap() {
-        if (map) map.remove(); 
-        map = L.map('mapDisplay').setView([45.015, 78.373], 14);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
-        taskData.forEach(t => {
-            L.marker([t.lat, t.lng]).addTo(map).bindPopup(`<b>${t.title}</b><br>${t.cat}`);
-        });
-    }
-
-    // Запуск
-    renderFeed();
+    // Инициализация
+    applyTranslations();
 </script>
 </body>
 </html>
