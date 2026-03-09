@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Help Hand - Management & Modules</title>
+    <title>Help Hand - Creator & Volunteer Sync</title>
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
@@ -11,8 +11,6 @@
             --primary: #4776E6;
             --primary-gradient: linear-gradient(135deg, #4776E6 0%, #8E54E9 100%);
             --success: #00b894;
-            --warning: #f1c40f;
-            --danger: #ff7675;
             --bg: #F8F9FD;
             --card: #FFFFFF;
             --text-main: #2d3436;
@@ -21,9 +19,9 @@
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        body { font-family: 'Manrope', sans-serif; background: var(--bg); color: var(--text-main); overflow-x: hidden; }
+        body { font-family: 'Manrope', sans-serif; background: var(--bg); color: var(--text-main); }
 
-        .app-container { max-width: 480px; margin: 0 auto; min-height: 100vh; padding-bottom: 90px; position: relative; }
+        .app-container { max-width: 480px; margin: 0 auto; min-height: 100vh; padding-bottom: 90px; }
 
         header {
             padding: 20px; display: flex; justify-content: space-between; align-items: center;
@@ -35,63 +33,46 @@
         .screen.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* Модули (Категории) */
-        .module-filter {
-            display: flex; gap: 10px; overflow-x: auto; padding-bottom: 15px; margin-bottom: 10px;
-            scrollbar-width: none;
+        /* Форма создания */
+        .form-group { margin-bottom: 15px; }
+        label { display: block; font-size: 0.8rem; font-weight: 700; margin-bottom: 5px; color: var(--text-sub); }
+        input, textarea, select {
+            width: 100%; padding: 12px; border-radius: 12px; border: 1px solid #eee;
+            font-family: inherit; font-size: 0.9rem; outline: none;
         }
-        .module-filter::-webkit-scrollbar { display: none; }
-        .module-btn {
-            padding: 8px 16px; border-radius: 12px; border: none; background: var(--card);
-            color: var(--text-sub); font-weight: 700; font-size: 0.8rem; cursor: pointer;
-            white-space: nowrap; box-shadow: var(--shadow); transition: 0.2s;
-        }
-        .module-btn.active { background: var(--primary); color: white; }
+        textarea { height: 100px; resize: none; }
 
-        /* Карточки заданий */
+        /* Модули выбора */
+        .module-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 15px; }
+        .module-opt {
+            background: white; padding: 10px; border-radius: 12px; text-align: center;
+            border: 2px solid transparent; cursor: pointer; font-size: 0.7rem; font-weight: 700; box-shadow: var(--shadow);
+        }
+        .module-opt.selected { border-color: var(--primary); background: #f0f3ff; }
+
+        /* Карточки */
         .req-card {
             background: var(--card); padding: 16px; border-radius: 20px; margin-bottom: 12px;
-            display: flex; gap: 15px; box-shadow: var(--shadow); cursor: pointer; position: relative;
+            display: flex; gap: 15px; box-shadow: var(--shadow); position: relative;
         }
         .req-icon { width: 45px; height: 45px; border-radius: 12px; background: #f0f3ff; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; }
-        .req-title { font-weight: 700; font-size: 0.9rem; margin-bottom: 4px; }
-        .req-meta { font-size: 0.7rem; color: var(--text-sub); }
+        .status-badge { position: absolute; top: 15px; right: 15px; font-size: 0.6rem; padding: 3px 8px; border-radius: 8px; font-weight: 800; }
         
-        .status-badge {
-            position: absolute; top: 15px; right: 15px; font-size: 0.6rem; 
-            padding: 3px 8px; border-radius: 8px; font-weight: 800; text-transform: uppercase;
-        }
-        .status-process { background: #e1f5fe; color: #039be5; }
-        .status-done { background: #e8f5e9; color: #2e7d32; }
-
-        /* Профиль */
-        .profile-section { margin-top: 25px; }
-        .profile-section h4 { font-size: 1rem; margin-bottom: 15px; color: var(--text-main); }
-
-        /* Модалка */
-        .modal {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.5); z-index: 2000; display: none; align-items: flex-end;
-        }
-        .modal-content {
-            background: white; width: 100%; max-width: 480px; margin: 0 auto;
-            border-radius: 30px 30px 0 0; padding: 30px 20px;
-        }
+        /* Кнопки */
         .btn-main {
             background: var(--primary-gradient); color: white; border: none; width: 100%;
-            padding: 15px; border-radius: 15px; font-weight: 700; margin-top: 20px; cursor: pointer;
+            padding: 15px; border-radius: 15px; font-weight: 700; cursor: pointer; margin-top: 10px;
         }
 
-        /* Навигация */
         nav {
             position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
             width: 100%; max-width: 480px; background: white;
             display: flex; justify-content: space-around; padding: 12px 0 25px;
             border-top: 1px solid #eee; z-index: 1000;
         }
-        .nav-link { text-align: center; color: #b2bec3; font-size: 0.65rem; font-weight: 700; cursor: pointer; }
+        .nav-link { text-align: center; color: #b2bec3; font-size: 0.6rem; font-weight: 700; cursor: pointer; }
         .nav-link.active { color: var(--primary); }
-        .nav-link i { font-size: 1.4rem; display: block; }
+        .nav-link i { font-size: 1.3rem; display: block; margin-bottom: 2px; }
     </style>
 </head>
 <body>
@@ -99,145 +80,157 @@
 <div class="app-container">
     <header>
         <div class="logo">Help Hand</div>
-        <select class="lang-pill" id="langSwitcher" onchange="updateLang()">
-            <option value="ru">RU</option>
-            <option value="kz">KZ</option>
-            <option value="en">EN</option>
-        </select>
+        <div style="font-size: 0.7rem; font-weight: 800; color: var(--success)">ONLINE</div>
     </header>
 
     <div id="home" class="screen active">
-        <div class="module-filter" id="moduleFilter">
-            <button class="module-btn active" onclick="filterModules('Все', this)">Все</button>
-            <button class="module-btn" onclick="filterModules('Быт', this)">Быт</button>
-            <button class="module-btn" onclick="filterModules('Здоровье', this)">Здоровье</button>
-            <button class="module-btn" onclick="filterModules('Транспорт', this)">Транспорт</button>
-        </div>
+        <h3 style="margin-bottom:15px;">Задания в городе</h3>
         <div id="feedContainer"></div>
     </div>
 
-    <div id="map" class="screen" style="padding:0; height:70vh;">
+    <div id="map" class="screen" style="padding:0; height:75vh;">
         <div id="mapDisplay" style="width:100%; height:100%;"></div>
     </div>
 
-    <div id="profile" class="screen">
-        <div class="user-info" style="display:flex; align-items:center; gap:15px; margin-bottom:30px;">
-            <div style="width:60px; height:60px; border-radius:50%; background:#eee; overflow:hidden;">
-                <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Nurasyl" style="width:100%">
-            </div>
-            <div>
-                <h2 id="userName">Нурасыл</h2>
-                <p style="font-size:0.8rem; color:var(--primary); font-weight:800;">Золотой волонтер • LVL 4</p>
-            </div>
+    <div id="create" class="screen">
+        <h3 style="margin-bottom:20px;">Новая просьба</h3>
+        
+        <label>Выберите категорию (Модуль)</label>
+        <div class="module-grid">
+            <div class="module-opt selected" onclick="selectModule('Быт', '🏠', this)">🏠<br>Быт</div>
+            <div class="module-opt" onclick="selectModule('Здоровье', '💊', this)">💊<br>Здоровье</div>
+            <div class="module-opt" onclick="selectModule('Транспорт', '🚗', this)">🚗<br>Трансп.</div>
         </div>
 
-        <div class="profile-section">
-            <h4 id="txtMyTasks">Мои активные задания</h4>
-            <div id="myTasksContainer">
-                <p style="font-size:0.8rem; color:var(--text-sub); text-align:center;">У вас пока нет активных заданий</p>
-            </div>
+        <div class="form-group">
+            <label>Что нужно сделать?</label>
+            <input type="text" id="taskTitle" placeholder="Напр: Купить хлеб">
         </div>
+
+        <div class="form-group">
+            <label>Подробности</label>
+            <textarea id="taskDesc" placeholder="Опишите детали здесь..."></textarea>
+        </div>
+
+        <button class="btn-main" onclick="createNewTask()">Опубликовать на карте</button>
+    </div>
+
+    <div id="profile" class="screen">
+        <div class="user-info" style="display:flex; align-items:center; gap:15px; margin-bottom:25px;">
+            <div style="width:50px; height:50px; border-radius:50%; background:#eee; overflow:hidden;">
+                <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Nurasyl" style="width:100%">
+            </div>
+            <div><h2>Нурасыл</h2><p style="font-size:0.7rem; color:var(--text-sub)">Рейтинг: 5.0 ⭐</p></div>
+        </div>
+        
+        <h4 style="margin-bottom:10px;">Мои заказы</h4>
+        <div id="myRequestsContainer"></div>
+        
+        <h4 style="margin-top:20px; margin-bottom:10px;">Я помогаю</h4>
+        <div id="myHelpContainer"></div>
     </div>
 
     <nav>
-        <div class="nav-link active" onclick="showScreen('home', this)"><i>🏠</i><span id="navHome">Лента</span></div>
-        <div class="nav-link" onclick="showScreen('map', this); initMap();"><i>📍</i><span id="navMap">Карта</span></div>
-        <div class="nav-link" onclick="showScreen('profile', this)"><i>👤</i><span id="navProfile">Профиль</span></div>
+        <div class="nav-link active" onclick="showScreen('home', this)"><i>📋</i><span>Лента</span></div>
+        <div class="nav-link" onclick="showScreen('map', this); initMap();"><i>📍</i><span>Карта</span></div>
+        <div class="nav-link" onclick="showScreen('create', this)"><i>➕</i><span>Создать</span></div>
+        <div class="nav-link" onclick="showScreen('profile', this)"><i>👤</i><span>Профиль</span></div>
     </nav>
-</div>
-
-<div id="taskModal" class="modal" onclick="this.style.display='none'">
-    <div class="modal-content" onclick="event.stopPropagation()">
-        <h2 id="modalTitle">Задание</h2>
-        <p id="modalDesc" style="margin: 15px 0; color: var(--text-sub); font-size: 0.9rem;"></p>
-        <button class="btn-main" id="btnAcceptAction">Откликнуться</button>
-    </div>
 </div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
-    let currentLang = 'ru';
-    let myTasks = []; // Массив для заданий, которые взял юзер
-    
-    const taskData = [
-        { id: 1, lat: 45.015, lng: 78.373, cat: "Быт", ru: "Вынести мусор", kz: "Қоқыс шығару", en: "Take out trash", desc: "Нужна помощь на 6 этаже.", icon: "🗑️" },
-        { id: 2, lat: 45.018, lng: 78.378, cat: "Здоровье", ru: "Купить лекарства", kz: "Дәрі сатып алу", en: "Buy medicine", desc: "Аспирин в аптеке №1.", icon: "💊" },
-        { id: 3, lat: 45.012, lng: 78.365, cat: "Транспорт", ru: "Помочь с сумками", kz: "Сөмкеге көмек", en: "Help with bags", desc: "От остановки до дома.", icon: "🛍️" },
-        { id: 4, lat: 45.020, lng: 78.370, cat: "Быт", ru: "Полить цветы", kz: "Гүл суару", en: "Water flowers", desc: "В офисе на 2 этаже.", icon: "🌿" }
+    // Исходные данные
+    let taskData = [
+        { id: 1, lat: 45.015, lng: 78.373, cat: "Быт", title: "Вынести мусор", desc: "6 этаж", icon: "🏠", owner: "System" }
     ];
+    let myHelp = []; // Задания, за которые я взялся
+    let selectedCat = "Быт";
+    let selectedIcon = "🏠";
 
-    const ui = {
-        ru: { navHome: "Лента", navMap: "Карта", navProfile: "Профиль", txtMyTasks: "Мои задания", btnAccept: "Откликнуться", statusProcess: "В процессе" },
-        kz: { navHome: "Лента", navMap: "Карта", navProfile: "Профиль", txtMyTasks: "Тапсырмаларым", btnAccept: "Көмектесу", statusProcess: "Орындалуда" },
-        en: { navHome: "Feed", navMap: "Map", navProfile: "Profile", txtMyTasks: "My Tasks", btnAccept: "Accept", statusProcess: "In Progress" }
-    };
-
-    function updateLang() {
-        currentLang = document.getElementById('langSwitcher').value;
-        const t = ui[currentLang];
-        document.getElementById('navHome').innerText = t.navHome;
-        document.getElementById('navMap').innerText = t.navMap;
-        document.getElementById('navProfile').innerText = t.navProfile;
-        document.getElementById('txtMyTasks').innerText = t.txtMyTasks;
-        renderFeed('Все');
-        renderMyTasks();
+    function selectModule(cat, icon, el) {
+        document.querySelectorAll('.module-opt').forEach(opt => opt.classList.remove('selected'));
+        el.classList.add('selected');
+        selectedCat = cat;
+        selectedIcon = icon;
     }
 
-    function renderFeed(filter = 'Все') {
+    function renderFeed() {
         const container = document.getElementById('feedContainer');
-        const filtered = filter === 'Все' ? taskData : taskData.filter(t => t.cat === filter);
+        container.innerHTML = taskData.map(task => `
+            <div class="req-card" onclick="takeTask(${task.id})">
+                <div class="req-icon">${task.icon}</div>
+                <div class="req-content">
+                    <div class="req-title">${task.title}</div>
+                    <div class="req-meta">${task.cat} • Нажмите чтобы помочь</div>
+                </div>
+            </div>
+        `).reverse().join(''); // Новые сверху
+    }
+
+    function createNewTask() {
+        const title = document.getElementById('taskTitle').value;
+        const desc = document.getElementById('taskDesc').value;
         
-        container.innerHTML = filtered.map(task => `
-            <div class="req-card" onclick="openTask(${task.id})">
-                <div class="req-icon">${task.icon}</div>
+        if(!title) return alert("Введите название!");
+
+        const newTask = {
+            id: Date.now(),
+            lat: 45.015 + (Math.random() - 0.5) * 0.01, // Рандомно рядом в Талдыкоргане
+            lng: 78.373 + (Math.random() - 0.5) * 0.01,
+            cat: selectedCat,
+            title: title,
+            desc: desc,
+            icon: selectedIcon,
+            owner: "Me"
+        };
+
+        taskData.push(newTask);
+        renderFeed();
+        renderMyRequests();
+        alert("Задание опубликовано!");
+        showScreen('home', document.querySelector('nav div:first-child'));
+        
+        // Очистка формы
+        document.getElementById('taskTitle').value = "";
+        document.getElementById('taskDesc').value = "";
+    }
+
+    function takeTask(id) {
+        const task = taskData.find(t => t.id === id);
+        if(task.owner === "Me") return alert("Это ваше собственное задание!");
+        if(!myHelp.find(t => t.id === id)) {
+            myHelp.push(task);
+            alert("Вы взялись за помощь!");
+            renderMyHelp();
+        }
+    }
+
+    function renderMyRequests() {
+        const container = document.getElementById('myRequestsContainer');
+        const mine = taskData.filter(t => t.owner === "Me");
+        container.innerHTML = mine.length ? mine.map(t => `
+            <div class="req-card" style="border-left: 4px solid var(--primary)">
+                <div class="req-icon">${t.icon}</div>
                 <div class="req-content">
-                    <div class="req-title">${task[currentLang]}</div>
-                    <div class="req-meta">${task.cat} • ~200м</div>
+                    <div class="req-title">${t.title}</div>
+                    <div class="req-meta">Ожидает волонтера</div>
                 </div>
             </div>
-        `).join('');
+        `).join('') : '<p style="font-size:0.7rem; color:#999;">Вы еще ничего не просили</p>';
     }
 
-    function filterModules(cat, btn) {
-        document.querySelectorAll('.module-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        renderFeed(cat);
-    }
-
-    function openTask(id) {
-        const task = taskData.find(t => t.id === id);
-        document.getElementById('modalTitle').innerText = task[currentLang];
-        document.getElementById('modalDesc').innerText = task.desc;
-        document.getElementById('taskModal').style.display = 'flex';
-        document.getElementById('btnAcceptAction').onclick = () => acceptTask(id);
-    }
-
-    function acceptTask(id) {
-        const task = taskData.find(t => t.id === id);
-        if(!myTasks.find(t => t.id === id)) {
-            myTasks.push({...task, status: 'process'});
-            alert("Задание добавлено в ваш профиль!");
-        }
-        document.getElementById('taskModal').style.display = 'none';
-        renderMyTasks();
-    }
-
-    function renderMyTasks() {
-        const container = document.getElementById('myTasksContainer');
-        if(myTasks.length === 0) {
-            container.innerHTML = '<p style="text-align:center; font-size:0.8rem; color:#999;">Нет активных задач</p>';
-            return;
-        }
-        container.innerHTML = myTasks.map(task => `
-            <div class="req-card">
-                <div class="req-icon">${task.icon}</div>
+    function renderMyHelp() {
+        const container = document.getElementById('myHelpContainer');
+        container.innerHTML = myHelp.map(t => `
+            <div class="req-card" style="border-left: 4px solid var(--success)">
+                <div class="req-icon">${t.icon}</div>
                 <div class="req-content">
-                    <div class="req-title">${task[currentLang]}</div>
-                    <div class="req-meta">${task.cat}</div>
+                    <div class="req-title">${t.title}</div>
+                    <div class="req-meta">В процессе</div>
                 </div>
-                <span class="status-badge status-process">${ui[currentLang].statusProcess}</span>
             </div>
-        `).join('');
+        `).join('') || '<p style="font-size:0.7rem; color:#999;">Пока нет активной помощи</p>';
     }
 
     function showScreen(id, el) {
@@ -249,13 +242,16 @@
 
     let map;
     function initMap() {
-        if (map) return;
+        if (map) map.remove(); 
         map = L.map('mapDisplay').setView([45.015, 78.373], 14);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
-        taskData.forEach(t => L.marker([t.lat, t.lng]).addTo(map).on('click', () => openTask(t.id)));
+        taskData.forEach(t => {
+            L.marker([t.lat, t.lng]).addTo(map).bindPopup(`<b>${t.title}</b><br>${t.cat}`);
+        });
     }
 
-    updateLang();
+    // Запуск
+    renderFeed();
 </script>
 </body>
 </html>
