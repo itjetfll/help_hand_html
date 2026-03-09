@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Help Hand MVP</title>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #4776E6;
+            --primary-gradient: linear-gradient(135deg, #4776E6 0%, #8E54E9 100%);
+            --success: #00b894;
+            --warning: #fdcb6e;
+            --danger: #ff7675;
+            --bg: #F8F9FD;
+            --card: #FFFFFF;
+            --text-main: #2d3436;
+            --text-sub: #636e72;
+            --shadow: 0 10px 20px rgba(0,0,0,0.05);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { font-family: 'Manrope', sans-serif; background: var(--bg); color: var(--text-main); overflow-x: hidden; }
+
+        /* App Layout */
+        .app-container { max-width: 480px; margin: 0 auto; min-height: 100vh; padding-bottom: 80px; position: relative; }
+
+        /* Header */
+        header {
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--bg);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .logo { font-weight: 800; font-size: 1.4rem; letter-spacing: -1px; background: var(--primary-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        
+        .lang-pill {
+            background: var(--card);
+            border: 1px solid #eee;
+            border-radius: 20px;
+            padding: 5px 12px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: var(--shadow);
+        }
+
+        /* Screens Management */
+        .screen { display: none; padding: 0 20px; animation: fadeIn 0.3s ease; }
+        .screen.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Profile Card (Gamification) */
+        .user-card {
+            background: var(--primary-gradient);
+            border-radius: 24px;
+            padding: 25px;
+            color: white;
+            box-shadow: 0 15px 30px rgba(71, 118, 230, 0.3);
+            margin-bottom: 25px;
+        }
+        .user-info { display: flex; align-items: center; gap: 15px; margin-bottom: 20px; }
+        .avatar { width: 60px; height: 60px; border-radius: 50%; border: 3px solid rgba(255,255,255,0.3); overflow: hidden; background: #eee; }
+        .level-tag { background: rgba(255,255,255,0.2); padding: 4px 12px; border-radius: 20px; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; }
+
+        .progress-bar { height: 8px; background: rgba(255,255,255,0.2); border-radius: 4px; margin: 12px 0; overflow: hidden; }
+        .progress-fill { width: 65%; height: 100%; background: white; border-radius: 4px; }
+        .stats-row { display: flex; justify-content: space-between; font-size: 0.8rem; opacity: 0.9; }
+
+        /* Action Buttons */
+        .action-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 30px; }
+        .action-card {
+            background: var(--card);
+            padding: 20px;
+            border-radius: 20px;
+            text-align: center;
+            box-shadow: var(--shadow);
+            border: 1px solid rgba(0,0,0,0.02);
+            transition: 0.2s;
+        }
+        .action-card:active { transform: scale(0.95); }
+        .action-card i { font-size: 1.5rem; margin-bottom: 10px; display: block; }
+        .action-card span { font-size: 0.9rem; font-weight: 700; }
+
+        /* Badges */
+        .badge-scroll { display: flex; gap: 15px; overflow-x: auto; padding-bottom: 10px; scrollbar-width: none; }
+        .badge-scroll::-webkit-scrollbar { display: none; }
+        .badge-item {
+            min-width: 80px;
+            height: 100px;
+            background: var(--card);
+            border-radius: 18px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            box-shadow: var(--shadow);
+            border: 1px solid #eee;
+        }
+        .badge-item.locked { opacity: 0.4; filter: grayscale(1); }
+        .badge-icon { font-size: 1.8rem; margin-bottom: 5px; }
+        .badge-name { font-size: 0.6rem; font-weight: 700; text-align: center; padding: 0 5px; }
+
+        /* Feed Requests */
+        .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; margin-top: 10px; }
+        .section-header h3 { font-size: 1.1rem; font-weight: 800; }
+        
+        .req-card {
+            background: var(--card);
+            padding: 15px;
+            border-radius: 20px;
+            margin-bottom: 15px;
+            display: flex;
+            gap: 15px;
+            box-shadow: var(--shadow);
+            border: 1px solid rgba(0,0,0,0.01);
+        }
+        .req-icon { width: 50px; height: 50px; border-radius: 15px; background: #f0f3ff; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; }
+        .req-content { flex: 1; }
+        .req-title { font-weight: 700; font-size: 0.9rem; margin-bottom: 4px; }
+        .req-meta { font-size: 0.75rem; color: var(--text-sub); display: flex; gap: 10px; }
+        .status-dot { width: 6px; height: 6px; background: var(--success); border-radius: 50%; display: inline-block; margin-right: 5px; }
+
+        /* Bottom Nav */
+        nav {
+            position: fixed;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100%;
+            max-width: 480px;
+            background: rgba(255,255,255,0.9);
+            backdrop-filter: blur(10px);
+            display: flex;
+            justify-content: space-around;
+            padding: 15px 10px 25px;
+            border-top: 1px solid #eee;
+            z-index: 1000;
+        }
+        .nav-link { text-align: center; color: #b2bec3; text-decoration: none; font-size: 0.65rem; font-weight: 700; cursor: pointer; transition: 0.3s; }
+        .nav-link.active { color: var(--primary); }
+        .nav-link i { font-size: 1.4rem; display: block; margin-bottom: 4px; }
+
+        /* SOS Button */
+        .sos-btn {
+            position: fixed;
+            right: 20px;
+            bottom: 100px;
+            width: 60px;
+            height: 60px;
+            background: var(--danger);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 800;
+            box-shadow: 0 10px 20px rgba(255, 118, 117, 0.4);
+            cursor: pointer;
+            z-index: 99;
+            border: 4px solid white;
+        }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    <header>
+        <div class="logo">Help Hand</div>
+        <select class="lang-pill" id="langSwitcher" onchange="updateLang()">
+            <option value="ru">🇰🇿 RU</option>
+            <option value="kz">🇰🇿 KZ</option>
+            <option value="en">🇺🇸 EN</option>
+        </select>
+    </header>
+
+    <div class="sos-btn">SOS</div>
+
+    <div id="home" class="screen active">
+        <div class="user-card">
+            <div class="user-info">
+                <div class="avatar"><img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Nurasyl" alt="avatar" style="width:100%"></div>
+                <div>
+                    <h2 id="userName">Нурасыл</h2>
+                    <span class="level-tag" id="lvlTag">Уровень 4: Герой</span>
+                </div>
+            </div>
+            <div class="progress-bar"><div class="progress-fill" id="progFill"></div></div>
+            <div class="stats-row">
+                <span id="karmaScore">1,240 XP</span>
+                <span id="nextLvl">2,000 XP</span>
+            </div>
+        </div>
+
+        <div class="action-grid">
+            <div class="action-card">
+                <i>➕</i>
+                <span id="btnCreate">Создать</span>
+            </div>
+            <div class="action-card">
+                <i>💎</i>
+                <span id="btnStore">Магазин</span>
+            </div>
+        </div>
+
+        <div class="section-header">
+            <h3 id="txtBadges">Бейджи</h3>
+            <span style="color:var(--primary); font-size:0.8rem; font-weight:700" id="btnAll">Все</span>
+        </div>
+        
+        <div class="badge-scroll" id="badgeContainer">
+            </div>
+
+        <div class="section-header" style="margin-top: 25px;">
+            <h3 id="txtFeed">Помощь рядом</h3>
+        </div>
+
+        <div id="feedContainer">
+            </div>
+    </div>
+
+    <div id="profile" class="screen">
+        <h2 style="padding: 20px;" id="profileTitle">Профиль пользователя</h2>
+    </div>
+
+    <div id="map" class="screen">
+        <h2 style="padding: 20px;" id="mapTitle">Карта добрых дел</h2>
+    </div>
+
+    <nav>
+        <div class="nav-link active" onclick="showScreen('home', this)">
+            <i>🏠</i><span id="navHome">Главная</span>
+        </div>
+        <div class="nav-link" onclick="showScreen('map', this)">
+            <i>📍</i><span id="navMap">Карта</span>
+        </div>
+        <div class="nav-link" onclick="showScreen('profile', this)">
+            <i>👤</i><span id="navProfile">Профиль</span>
+        </div>
+    </nav>
+</div>
+
+<script>
+    const data = {
+        ru: {
+            userName: "Нурасыл",
+            lvlTag: "Уровень 4: Герой",
+            karmaScore: "1,240 XP",
+            nextLvl: "2,000 XP до след.",
+            btnCreate: "Попросить",
+            btnStore: "Бонусы",
+            txtBadges: "Достижения",
+            btnAll: "Все",
+            txtFeed: "Помощь рядом",
+            navHome: "Главная",
+            navMap: "Карта",
+            navProfile: "Профиль",
+            profileTitle: "Ваш профиль",
+            mapTitle: "Талдыкорган: Карта",
+            badges: [
+                { i: "🛡️", n: "Проверен", l: false },
+                { i: "⚡", n: "Скорость", l: false },
+                { i: "🤝", n: "Друг", l: false },
+                { i: "🔥", n: "Актив", l: true }
+            ],
+            feed: [
+                { t: "Вынести мусор (6 этаж)", d: "150м от вас", c: "Быт" },
+                { t: "Сходить в аптеку", d: "400м от вас", c: "Здоровье" }
+            ]
+        },
+        kz: {
+            userName: "Нұрасыл",
+            lvlTag: "4 деңгей: Батыр",
+            karmaScore: "1,240 XP",
+            nextLvl: "Келесіге 2,000 XP",
+            btnCreate: "Көмек сұрау",
+            btnStore: "Бонустар",
+            txtBadges: "Жетістіктер",
+            btnAll: "Барлығы",
+            txtFeed: "Жақын маңдағы көмек",
+            navHome: "Басты бет",
+            navMap: "Карта",
+            navProfile: "Профиль",
+            profileTitle: "Сіздің профиліңіз",
+            mapTitle: "Талдықорған: Карта",
+            badges: [
+                { i: "🛡️", n: "Расталған", l: false },
+                { i: "⚡", n: "Жылдам", l: false },
+                { i: "🤝", n: "Дос", l: false },
+                { i: "🔥", n: "Белсенді", l: true }
+            ],
+            feed: [
+                { t: "Қоқыс шығару (6 қабат)", d: "150м қашықтықта", c: "Тұрмыс" },
+                { t: "Дәріханаға бару", d: "400м қашықтықта", c: "Денсаулық" }
+            ]
+        },
+        en: {
+            userName: "Nurasyl",
+            lvlTag: "Level 4: Hero",
+            karmaScore: "1,240 XP",
+            nextLvl: "2,000 XP next",
+            btnCreate: "Ask Help",
+            btnStore: "Store",
+            txtBadges: "Badges",
+            btnAll: "View All",
+            txtFeed: "Nearby Requests",
+            navHome: "Home",
+            navMap: "Map",
+            navProfile: "Profile",
+            profileTitle: "User Profile",
+            mapTitle: "City Map",
+            badges: [
+                { i: "🛡️", n: "Verified", l: false },
+                { i: "⚡", n: "Fast", l: false },
+                { i: "🤝", n: "Friend", l: false },
+                { i: "🔥", n: "Active", l: true }
+            ],
+            feed: [
+                { t: "Take out trash (6th fl)", d: "150m away", c: "Home" },
+                { t: "Pharmacy visit", d: "400m away", c: "Health" }
+            ]
+        }
+    };
+
+    function updateLang() {
+        const lang = document.getElementById('langSwitcher').value;
+        const t = data[lang];
+
+        // Update Text
+        document.getElementById('userName').innerText = t.userName;
+        document.getElementById('lvlTag').innerText = t.lvlTag;
+        document.getElementById('karmaScore').innerText = t.karmaScore;
+        document.getElementById('nextLvl').innerText = t.nextLvl;
+        document.getElementById('btnCreate').innerText = t.btnCreate;
+        document.getElementById('btnStore').innerText = t.btnStore;
+        document.getElementById('txtBadges').innerText = t.txtBadges;
+        document.getElementById('btnAll').innerText = t.btnAll;
+        document.getElementById('txtFeed').innerText = t.txtFeed;
+        document.getElementById('navHome').innerText = t.navHome;
+        document.getElementById('navMap').innerText = t.navMap;
+        document.getElementById('navProfile').innerText = t.navProfile;
+        document.getElementById('profileTitle').innerText = t.profileTitle;
+        document.getElementById('mapTitle').innerText = t.mapTitle;
+
+        // Render Badges
+        const bCont = document.getElementById('badgeContainer');
+        bCont.innerHTML = t.badges.map(b => `
+            <div class="badge-item ${b.l ? 'locked' : ''}">
+                <span class="badge-icon">${b.i}</span>
+                <span class="badge-name">${b.n}</span>
+            </div>
+        `).join('');
+
+        // Render Feed
+        const fCont = document.getElementById('feedContainer');
+        fCont.innerHTML = t.feed.map(f => `
+            <div class="req-card">
+                <div class="req-icon">🤝</div>
+                <div class="req-content">
+                    <div class="req-title">${f.t}</div>
+                    <div class="req-meta">
+                        <span><span class="status-dot"></span>${f.c}</span>
+                        <span>📍 ${f.d}</span>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    function showScreen(screenId, navEl) {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.getElementById(screenId).classList.add('active');
+        
+        document.querySelectorAll('.nav-link').forEach(n => n.classList.remove('active'));
+        navEl.classList.add('active');
+        
+        window.scrollTo(0, 0);
+    }
+
+    // Start
+    updateLang();
+</script>
+
+</body>
+</html>
