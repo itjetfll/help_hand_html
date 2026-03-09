@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Help Hand - Final Fix</title>
+    <title>Help Hand - Pro History</title>
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
@@ -23,31 +23,33 @@
         .pill { background: rgba(255,255,255,0.2); border: 1.5px solid white; color: white; padding: 6px 18px; border-radius: 20px; cursor: pointer; font-weight: 800; font-size: 0.75rem; }
         .pill.active { background: white; color: var(--primary); }
 
-        /* Layout */
+        /* Main Shell */
         .app-shell { max-width: 480px; margin: 0 auto; height: 100vh; display: none; flex-direction: column; position: relative; }
         header { padding: 15px 20px; background: white; display: flex; justify-content: space-between; align-items: center; z-index: 10; border-bottom: 1px solid #eee; }
         #map { flex-grow: 1; width: 100%; z-index: 1; }
 
-        /* Feed Sheet */
+        /* Feed */
         .task-sheet { position: absolute; bottom: 85px; left: 15px; right: 15px; max-height: 40vh; background: rgba(255,255,255,0.98); backdrop-filter: blur(10px); border-radius: 28px; z-index: 100; padding: 20px; overflow-y: auto; box-shadow: 0 -5px 30px rgba(0,0,0,0.1); }
         .task-card { background: white; padding: 15px; border-radius: 20px; margin-bottom: 10px; border: 1px solid #f1f2f6; display: flex; justify-content: space-between; align-items: center; }
 
-        /* Profile Modal */
-        .modal { position: fixed; inset: 0; background: white; z-index: 2000; padding: 40px 30px; display: none; flex-direction: column; }
+        /* Profile Modal & History */
+        .modal { position: fixed; inset: 0; background: white; z-index: 2000; padding: 30px; display: none; flex-direction: column; }
         .modal.active { display: flex; }
-        .xp-bar { width: 100%; height: 12px; background: #eee; border-radius: 6px; margin: 20px 0; overflow: hidden; }
-        .xp-fill { height: 100%; background: var(--gradient); transition: 0.5s; }
+        
+        .profile-tabs { display: flex; border-bottom: 1px solid #eee; margin-top: 20px; }
+        .tab-link { flex: 1; padding: 12px; text-align: center; font-weight: 800; font-size: 0.8rem; color: #b2bec3; cursor: pointer; }
+        .tab-link.active { color: var(--primary); border-bottom: 3px solid var(--primary); }
+        
+        #historyContent { flex-grow: 1; overflow-y: auto; margin-top: 15px; }
+        .history-item { background: #f8f9fa; padding: 12px; border-radius: 15px; margin-bottom: 8px; font-size: 0.85rem; border: 1px dashed #ddd; }
 
         /* Statuses */
         .status-badge { font-size: 0.6rem; font-weight: 800; padding: 4px 8px; border-radius: 8px; text-transform: uppercase; }
         .s-open { background: #e3f2fd; color: #1976d2; }
         .s-proc { background: #fff3e0; color: #e65100; }
+        .s-done { background: #e8f5e9; color: #2e7d32; }
 
-        /* Buttons */
         .btn-prime { background: var(--gradient); color: white; border: none; padding: 18px; border-radius: 20px; font-weight: 800; cursor: pointer; width: 100%; }
-        input, select { width: 100%; padding: 16px; border-radius: 18px; border: 1.5px solid #eee; margin-bottom: 15px; font-family: inherit; }
-
-        /* Navigation */
         nav { height: 75px; background: white; display: flex; justify-content: space-around; align-items: center; border-top: 1px solid #eee; }
         .nav-item { text-align: center; color: #b2bec3; cursor: pointer; font-size: 0.65rem; font-weight: 800; }
         .nav-item.active { color: var(--primary); }
@@ -86,16 +88,21 @@
     </div>
 
     <div id="profileModal" class="modal">
-        <h1 id="p-user-name" style="font-size: 2rem; margin-bottom: 5px;">User</h1>
-        <p id="p-role-disp" style="color: #999; font-weight: 600;">Волонтер</p>
-        <div class="xp-bar"><div class="xp-fill" id="xpBarFill" style="width: 0%"></div></div>
-        <div style="background: #f8f9fa; padding: 20px; border-radius: 20px; margin-top: 10px;">
-            <p id="t-stats" style="font-size: 0.8rem; font-weight: 800; color: #777;">СТАТИСТИКА</p>
-            <div style="font-size: 1.5rem; font-weight: 800; margin-top: 5px;"><span id="p-helped">0</span> ✅</div>
+        <h2 id="p-user-name">User</h2>
+        <div style="background: #f1f2f6; padding: 15px; border-radius: 20px; margin-top: 10px; display: flex; justify-content: space-between; align-items: center;">
+            <span id="t-stats">Выполнено:</span>
+            <strong id="p-helped" style="color: var(--primary)">0</strong>
         </div>
-        <div style="flex-grow: 1;"></div>
-        <button class="btn-prime" onclick="closeProfile()" id="t-back">Вернуться к карте</button>
-        <button onclick="location.reload()" style="background:none; border:none; margin-top:15px; color:#fab1a0; font-weight:800;">Выйти из аккаунта</button>
+
+        <div class="profile-tabs">
+            <div class="tab-link active" onclick="switchTab('proc', this)" id="t-tab-proc">В процессе</div>
+            <div class="tab-link" onclick="switchTab('done', this)" id="t-tab-hist">История</div>
+        </div>
+
+        <div id="historyContent">
+            </div>
+
+        <button class="btn-prime" onclick="closeProfile()" id="t-back" style="margin-top: 15px;">К карте</button>
     </div>
 
     <div id="createModal" class="modal">
@@ -118,14 +125,15 @@
     let curLang = 'ru';
     let user = { name: "", role: "", xp: 0, helped: 0 };
     let tasks = [
-        { id: 1, title: "Помощь пожилому человеку", price: 1000, status: "open", dist: "250м" },
-        { id: 2, title: "Доставка продуктов", price: 600, status: "open", dist: "1.5км" }
+        { id: 1, title: "Помочь бабушке с пакетами", price: 500, status: "open", dist: "300м" },
+        { id: 2, title: "Выгулять собаку", price: 1200, status: "open", dist: "800м" }
     ];
+    let currentTab = 'proc';
 
     const i18n = {
-        ru: { near: "Задания рядом", n_map: "Карта", n_add: "Создать", n_prof: "Профиль", enter: "Войти", vol: "Волонтер", cre: "Заказчик", pub: "Опубликовать", new: "Новое задание", back: "Назад к карте", open: "Открыто", proc: "В процессе", take: "Помочь" },
-        kz: { near: "Тапсырмалар", n_map: "Карта", n_add: "Қосу", n_prof: "Профиль", enter: "Кіру", vol: "Волонтер", cre: "Тапсырысшы", pub: "Жариялау", new: "Жаңа өтініш", back: "Картаға қайту", open: "Ашық", proc: "Орындалуда", take: "Көмектесу" },
-        en: { near: "Nearby Tasks", n_map: "Map", n_add: "Create", n_prof: "Profile", enter: "Enter", vol: "Volunteer", cre: "Customer", pub: "Publish", new: "New Task", back: "Back to Map", open: "Open", proc: "In Progress", take: "Help" }
+        ru: { near: "Задания рядом", n_map: "Карта", n_add: "Создать", n_prof: "Профиль", enter: "Войти", vol: "Волонтер", cre: "Заказчик", pub: "Опубликовать", new: "Новое задание", back: "Назад", open: "Открыто", proc: "В процессе", hist: "История", take: "Помочь", finish: "Завершить", empty: "Здесь пока пусто" },
+        kz: { near: "Тапсырмалар", n_map: "Карта", n_add: "Қосу", n_prof: "Профиль", enter: "Кіру", vol: "Волонтер", cre: "Тапсырысшы", pub: "Жариялау", new: "Жаңа өтініш", back: "Артқа", open: "Ашық", proc: "Орындалуда", hist: "Тарихы", take: "Көмектесу", finish: "Аяқтау", empty: "Әзірге бос" },
+        en: { near: "Nearby Tasks", n_map: "Map", n_add: "Create", n_prof: "Profile", enter: "Enter", vol: "Volunteer", cre: "Customer", pub: "Publish", new: "New Task", back: "Back", open: "Open", proc: "In Progress", hist: "History", take: "Help", finish: "Finish", empty: "Nothing here yet" }
     };
 
     function changeLang(l, btn) {
@@ -147,7 +155,10 @@
         document.getElementById('t-pub').innerText = t.pub;
         document.getElementById('t-new').innerText = t.new;
         document.getElementById('t-back').innerText = t.back;
+        document.getElementById('t-tab-proc').innerText = t.proc;
+        document.getElementById('t-tab-hist').innerText = t.hist;
         renderFeed();
+        renderHistory();
     }
 
     function enterApp() {
@@ -155,7 +166,6 @@
         user.role = document.getElementById('regRole').value;
         document.getElementById('uNameDisp').innerText = user.name;
         document.getElementById('p-user-name').innerText = user.name;
-        document.getElementById('p-role-disp').innerText = (user.role === 'vol') ? i18n[curLang].vol : i18n[curLang].cre;
         if(user.role === 'vol') document.getElementById('navAdd').style.display = 'none';
         document.getElementById('authScreen').style.display = 'none';
         document.getElementById('app').style.display = 'flex';
@@ -166,17 +176,14 @@
     function renderFeed() {
         const feed = document.getElementById('feed');
         const t = i18n[curLang];
-        feed.innerHTML = tasks.map(task => `
+        feed.innerHTML = tasks.filter(x => x.status === 'open').map(task => `
             <div class="task-card">
                 <div>
-                    <span class="status-badge ${task.status === 'open' ? 's-open' : 's-proc'}">
-                        ${task.status === 'open' ? t.open : t.proc}
-                    </span>
-                    <div style="font-size:0.6rem; color:var(--primary); font-weight:800; margin-top:4px">📍 ${task.dist}</div>
+                    <span class="status-badge s-open">${t.open}</span>
                     <h4 style="margin:5px 0">${task.title}</h4>
-                    ${task.status === 'open' && user.role === 'vol' ? `<button onclick="takeTask(${task.id})" style="background:var(--gradient); color:white; border:none; padding:6px 12px; border-radius:10px; font-weight:800; font-size:0.7rem">${t.take}</button>` : ''}
+                    ${user.role === 'vol' ? `<button onclick="takeTask(${task.id})" style="background:var(--gradient); color:white; border:none; padding:6px 12px; border-radius:10px; font-weight:800; font-size:0.7rem">${t.take}</button>` : ''}
                 </div>
-                <div class="price-tag" style="font-weight:800; color:#2ecc71">${task.price} ₸</div>
+                <div style="font-weight:800; color:#2ecc71">${task.price} ₸</div>
             </div>
         `).join('');
     }
@@ -184,16 +191,50 @@
     function takeTask(id) {
         const task = tasks.find(x => x.id === id);
         task.status = 'processing';
-        user.xp += 25;
-        user.helped++;
-        document.getElementById('xpBadge').innerText = `LVL 1 • ${user.xp} XP`;
-        document.getElementById('xpBarFill').style.width = user.xp + "%";
-        document.getElementById('p-helped').innerText = user.helped;
         renderFeed();
+        renderHistory();
+        alert(curLang === 'kz' ? "Қабылданды! Профильді тексеріңіз." : "Принято! Проверьте профиль.");
     }
 
-    // ЛОГИКА ОКОН
-    function showProfile() { document.getElementById('profileModal').classList.add('active'); }
+    function renderHistory() {
+        const container = document.getElementById('historyContent');
+        const t = i18n[curLang];
+        const filtered = tasks.filter(x => x.status === (currentTab === 'proc' ? 'processing' : 'done'));
+
+        if(filtered.length === 0) {
+            container.innerHTML = `<p style="text-align:center; color:#999; margin-top:20px;">${t.empty}</p>`;
+            return;
+        }
+
+        container.innerHTML = filtered.map(task => `
+            <div class="history-item">
+                <div style="display:flex; justify-content:space-between">
+                    <b>${task.title}</b>
+                    <span>${task.price} ₸</span>
+                </div>
+                ${task.status === 'processing' ? `<button onclick="finishTask(${task.id})" style="margin-top:10px; background:#2ecc71; color:white; border:none; padding:5px 10px; border-radius:8px; font-size:0.7rem; font-weight:800;">${t.finish}</button>` : `<span class="status-badge s-done" style="margin-top:5px; display:inline-block">${t.done}</span>`}
+            </div>
+        `).join('');
+    }
+
+    function finishTask(id) {
+        const task = tasks.find(x => x.id === id);
+        task.status = 'done';
+        user.helped++;
+        user.xp += 50;
+        document.getElementById('p-helped').innerText = user.helped;
+        document.getElementById('xpBadge').innerText = `LVL 1 • ${user.xp} XP`;
+        renderHistory();
+    }
+
+    function switchTab(type, el) {
+        currentTab = type;
+        document.querySelectorAll('.tab-link').forEach(l => l.classList.remove('active'));
+        el.classList.add('active');
+        renderHistory();
+    }
+
+    function showProfile() { document.getElementById('profileModal').classList.add('active'); renderHistory(); }
     function closeProfile() { document.getElementById('profileModal').classList.remove('active'); }
     function showCreate() { document.getElementById('createModal').classList.add('active'); }
     function closeModal() { document.getElementById('createModal').classList.remove('active'); }
@@ -202,7 +243,7 @@
         const title = document.getElementById('taskTitle').value;
         const price = document.getElementById('taskPrice').value;
         if(!title || !price) return;
-        tasks.push({ id: Date.now(), title, price, status: "open", dist: "100м" });
+        tasks.push({ id: Date.now(), title, price, status: "open" });
         closeModal();
         renderFeed();
     }
