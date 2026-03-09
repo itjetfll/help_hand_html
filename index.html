@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Help Hand MVP - Map & Tasks</title>
+    <title>Help Hand - Management & Modules</title>
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
@@ -11,6 +11,7 @@
             --primary: #4776E6;
             --primary-gradient: linear-gradient(135deg, #4776E6 0%, #8E54E9 100%);
             --success: #00b894;
+            --warning: #f1c40f;
             --danger: #ff7675;
             --bg: #F8F9FD;
             --card: #FFFFFF;
@@ -22,110 +23,75 @@
         * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body { font-family: 'Manrope', sans-serif; background: var(--bg); color: var(--text-main); overflow-x: hidden; }
 
-        .app-container { max-width: 480px; margin: 0 auto; min-height: 100vh; padding-bottom: 80px; position: relative; }
+        .app-container { max-width: 480px; margin: 0 auto; min-height: 100vh; padding-bottom: 90px; position: relative; }
 
         header {
-            padding: 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: var(--bg);
-            position: sticky;
-            top: 0;
-            z-index: 1000;
+            padding: 20px; display: flex; justify-content: space-between; align-items: center;
+            background: var(--bg); position: sticky; top: 0; z-index: 1000;
         }
-        .logo { font-weight: 800; font-size: 1.4rem; letter-spacing: -1px; background: var(--primary-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        
-        .lang-pill { background: var(--card); border: 1px solid #eee; border-radius: 20px; padding: 5px 12px; font-size: 0.8rem; font-weight: 600; cursor: pointer; }
+        .logo { font-weight: 800; font-size: 1.4rem; background: var(--primary-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
 
         .screen { display: none; padding: 0 20px; animation: fadeIn 0.3s ease; }
         .screen.active { display: block; }
-        .screen.full-screen { padding: 0; height: calc(100vh - 140px); } /* Для карты */
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* Карта */
-        #mapDisplay { width: 100%; height: 100%; z-index: 1; }
-
-        /* Карточка профиля */
-        .user-card {
-            background: var(--primary-gradient);
-            border-radius: 24px;
-            padding: 20px;
-            color: white;
-            box-shadow: 0 15px 30px rgba(71, 118, 230, 0.2);
-            margin-bottom: 20px;
+        /* Модули (Категории) */
+        .module-filter {
+            display: flex; gap: 10px; overflow-x: auto; padding-bottom: 15px; margin-bottom: 10px;
+            scrollbar-width: none;
         }
-        .user-info { display: flex; align-items: center; gap: 12px; margin-bottom: 15px; }
-        .avatar { width: 50px; height: 50px; border-radius: 50%; border: 2px solid white; overflow: hidden; background: #eee; }
-        .level-tag { background: rgba(255,255,255,0.2); padding: 3px 10px; border-radius: 20px; font-size: 0.65rem; font-weight: 700; }
+        .module-filter::-webkit-scrollbar { display: none; }
+        .module-btn {
+            padding: 8px 16px; border-radius: 12px; border: none; background: var(--card);
+            color: var(--text-sub); font-weight: 700; font-size: 0.8rem; cursor: pointer;
+            white-space: nowrap; box-shadow: var(--shadow); transition: 0.2s;
+        }
+        .module-btn.active { background: var(--primary); color: white; }
 
-        .progress-bar { height: 6px; background: rgba(255,255,255,0.2); border-radius: 3px; margin: 10px 0; }
-        .progress-fill { width: 65%; height: 100%; background: white; border-radius: 3px; }
-
-        /* Лента заданий */
+        /* Карточки заданий */
         .req-card {
-            background: var(--card);
-            padding: 16px;
-            border-radius: 20px;
-            margin-bottom: 12px;
-            display: flex;
-            gap: 15px;
-            box-shadow: var(--shadow);
-            cursor: pointer;
+            background: var(--card); padding: 16px; border-radius: 20px; margin-bottom: 12px;
+            display: flex; gap: 15px; box-shadow: var(--shadow); cursor: pointer; position: relative;
         }
         .req-icon { width: 45px; height: 45px; border-radius: 12px; background: #f0f3ff; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; }
-        .req-content { flex: 1; }
         .req-title { font-weight: 700; font-size: 0.9rem; margin-bottom: 4px; }
         .req-meta { font-size: 0.7rem; color: var(--text-sub); }
+        
+        .status-badge {
+            position: absolute; top: 15px; right: 15px; font-size: 0.6rem; 
+            padding: 3px 8px; border-radius: 8px; font-weight: 800; text-transform: uppercase;
+        }
+        .status-process { background: #e1f5fe; color: #039be5; }
+        .status-done { background: #e8f5e9; color: #2e7d32; }
+
+        /* Профиль */
+        .profile-section { margin-top: 25px; }
+        .profile-section h4 { font-size: 1rem; margin-bottom: 15px; color: var(--text-main); }
 
         /* Модалка */
         .modal {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.5);
-            z-index: 2000;
-            display: none;
-            align-items: flex-end;
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5); z-index: 2000; display: none; align-items: flex-end;
         }
         .modal-content {
-            background: white;
-            width: 100%;
-            max-width: 480px;
-            margin: 0 auto;
-            border-radius: 30px 30px 0 0;
-            padding: 30px 20px;
-            animation: slideUp 0.3s ease;
+            background: white; width: 100%; max-width: 480px; margin: 0 auto;
+            border-radius: 30px 30px 0 0; padding: 30px 20px;
         }
-        @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
-        
         .btn-main {
-            background: var(--primary-gradient);
-            color: white;
-            border: none;
-            width: 100%;
-            padding: 15px;
-            border-radius: 15px;
-            font-weight: 700;
-            margin-top: 20px;
-            cursor: pointer;
+            background: var(--primary-gradient); color: white; border: none; width: 100%;
+            padding: 15px; border-radius: 15px; font-weight: 700; margin-top: 20px; cursor: pointer;
         }
 
         /* Навигация */
         nav {
-            position: fixed;
-            bottom: 0; left: 50%; transform: translateX(-50%);
-            width: 100%; max-width: 480px;
-            background: rgba(255,255,255,0.95);
-            backdrop-filter: blur(10px);
-            display: flex;
-            justify-content: space-around;
-            padding: 12px 0 25px;
-            border-top: 1px solid #eee;
-            z-index: 1000;
+            position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
+            width: 100%; max-width: 480px; background: white;
+            display: flex; justify-content: space-around; padding: 12px 0 25px;
+            border-top: 1px solid #eee; z-index: 1000;
         }
-        .nav-link { text-align: center; color: #b2bec3; font-size: 0.65rem; font-weight: 700; cursor: pointer; transition: 0.3s; }
+        .nav-link { text-align: center; color: #b2bec3; font-size: 0.65rem; font-weight: 700; cursor: pointer; }
         .nav-link.active { color: var(--primary); }
-        .nav-link i { font-size: 1.4rem; display: block; margin-bottom: 4px; }
+        .nav-link i { font-size: 1.4rem; display: block; }
     </style>
 </head>
 <body>
@@ -134,141 +100,162 @@
     <header>
         <div class="logo">Help Hand</div>
         <select class="lang-pill" id="langSwitcher" onchange="updateLang()">
-            <option value="ru">🇰🇿 RU</option>
-            <option value="kz">🇰🇿 KZ</option>
-            <option value="en">🇺🇸 EN</option>
+            <option value="ru">RU</option>
+            <option value="kz">KZ</option>
+            <option value="en">EN</option>
         </select>
     </header>
 
     <div id="home" class="screen active">
-        <div class="user-card">
-            <div class="user-info">
-                <div class="avatar"><img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Nurasyl" style="width:100%"></div>
-                <div>
-                    <h2 id="userName">Нурасыл</h2>
-                    <span class="level-tag" id="lvlTag">Герой • LVL 4</span>
-                </div>
-            </div>
-            <div class="progress-bar"><div class="progress-fill"></div></div>
-            <div style="display:flex; justify-content:space-between; font-size:0.7rem; opacity:0.8">
-                <span>1,240 XP</span>
-                <span id="txtNextLvl">До след. уровня 760 XP</span>
-            </div>
+        <div class="module-filter" id="moduleFilter">
+            <button class="module-btn active" onclick="filterModules('Все', this)">Все</button>
+            <button class="module-btn" onclick="filterModules('Быт', this)">Быт</button>
+            <button class="module-btn" onclick="filterModules('Здоровье', this)">Здоровье</button>
+            <button class="module-btn" onclick="filterModules('Транспорт', this)">Транспорт</button>
         </div>
-
-        <h3 id="txtFeed" style="margin-bottom:15px; font-weight:800;">Задания рядом</h3>
         <div id="feedContainer"></div>
     </div>
 
-    <div id="map" class="screen full-screen">
-        <div id="mapDisplay"></div>
+    <div id="map" class="screen" style="padding:0; height:70vh;">
+        <div id="mapDisplay" style="width:100%; height:100%;"></div>
     </div>
 
     <div id="profile" class="screen">
-        <div style="text-align:center; padding-top:40px;">
-            <div class="avatar" style="width:100px; height:100px; margin: 0 auto 20px; border: 4px solid var(--primary);">
+        <div class="user-info" style="display:flex; align-items:center; gap:15px; margin-bottom:30px;">
+            <div style="width:60px; height:60px; border-radius:50%; background:#eee; overflow:hidden;">
                 <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Nurasyl" style="width:100%">
             </div>
-            <h2 id="profileName">Нурасыл Шарипов</h2>
-            <p style="color:var(--text-sub)" id="profileStatus">Талдыкорган, IT School-Lyceum №28</p>
+            <div>
+                <h2 id="userName">Нурасыл</h2>
+                <p style="font-size:0.8rem; color:var(--primary); font-weight:800;">Золотой волонтер • LVL 4</p>
+            </div>
+        </div>
+
+        <div class="profile-section">
+            <h4 id="txtMyTasks">Мои активные задания</h4>
+            <div id="myTasksContainer">
+                <p style="font-size:0.8rem; color:var(--text-sub); text-align:center;">У вас пока нет активных заданий</p>
+            </div>
         </div>
     </div>
 
     <nav>
-        <div class="nav-link active" onclick="showScreen('home', this)"><i>🏠</i><span id="navHome">Главная</span></div>
+        <div class="nav-link active" onclick="showScreen('home', this)"><i>🏠</i><span id="navHome">Лента</span></div>
         <div class="nav-link" onclick="showScreen('map', this); initMap();"><i>📍</i><span id="navMap">Карта</span></div>
         <div class="nav-link" onclick="showScreen('profile', this)"><i>👤</i><span id="navProfile">Профиль</span></div>
     </nav>
 </div>
 
-<div id="taskModal" class="modal" onclick="closeModal(event)">
+<div id="taskModal" class="modal" onclick="this.style.display='none'">
     <div class="modal-content" onclick="event.stopPropagation()">
-        <div style="display:flex; gap:15px; align-items:center; margin-bottom:20px;">
-            <div id="modalIcon" class="req-icon">🤝</div>
-            <div>
-                <h2 id="modalTitle" style="font-size:1.2rem;">Задание</h2>
-                <p id="modalDist" style="font-size:0.8rem; color:var(--text-sub)">Расстояние</p>
-            </div>
-        </div>
-        <p id="modalDesc" style="color:var(--text-main); line-height:1.4;">Детальное описание задания появится здесь...</p>
-        <button class="btn-main" id="btnAccept" onclick="alert('Вы приняли задание! Удачи!')">Откликнуться</button>
+        <h2 id="modalTitle">Задание</h2>
+        <p id="modalDesc" style="margin: 15px 0; color: var(--text-sub); font-size: 0.9rem;"></p>
+        <button class="btn-main" id="btnAcceptAction">Откликнуться</button>
     </div>
 </div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
-    let map;
+    let currentLang = 'ru';
+    let myTasks = []; // Массив для заданий, которые взял юзер
+    
     const taskData = [
-        { id: 1, lat: 45.015, lng: 78.373, cat: "Быт", ru: "Вынести мусор", kz: "Қоқыс шығару", en: "Take out trash", desc: "6 этаж, лифт не работает, нужна помощь пожилому человеку.", icon: "🗑️" },
-        { id: 2, lat: 45.018, lng: 78.378, cat: "Здоровье", ru: "Купить лекарства", kz: "Дәрі сатып алу", en: "Buy medicine", desc: "Нужен аспирин и витамины. Аптека в этом же доме.", icon: "💊" },
-        { id: 3, lat: 45.012, lng: 78.365, cat: "Транспорт", ru: "Помочь с сумками", kz: "Сөмкеге көмек", en: "Help with bags", desc: "Помочь донести тяжелые сумки от остановки до подъезда.", icon: "🛍️" }
+        { id: 1, lat: 45.015, lng: 78.373, cat: "Быт", ru: "Вынести мусор", kz: "Қоқыс шығару", en: "Take out trash", desc: "Нужна помощь на 6 этаже.", icon: "🗑️" },
+        { id: 2, lat: 45.018, lng: 78.378, cat: "Здоровье", ru: "Купить лекарства", kz: "Дәрі сатып алу", en: "Buy medicine", desc: "Аспирин в аптеке №1.", icon: "💊" },
+        { id: 3, lat: 45.012, lng: 78.365, cat: "Транспорт", ru: "Помочь с сумками", kz: "Сөмкеге көмек", en: "Help with bags", desc: "От остановки до дома.", icon: "🛍️" },
+        { id: 4, lat: 45.020, lng: 78.370, cat: "Быт", ru: "Полить цветы", kz: "Гүл суару", en: "Water flowers", desc: "В офисе на 2 этаже.", icon: "🌿" }
     ];
 
-    const uiLang = {
-        ru: { navHome: "Главная", navMap: "Карта", navProfile: "Профиль", txtFeed: "Задания рядом", txtNextLvl: "До след. уровня 760 XP", btnAccept: "Откликнуться" },
-        kz: { navHome: "Басты бет", navMap: "Карта", navProfile: "Профиль", txtFeed: "Тапсырмалар", txtNextLvl: "Келесі деңгейге 760 XP", btnAccept: "Көмектесу" },
-        en: { navHome: "Home", navMap: "Map", navProfile: "Profile", txtFeed: "Tasks Nearby", txtNextLvl: "760 XP to next level", btnAccept: "Accept Task" }
+    const ui = {
+        ru: { navHome: "Лента", navMap: "Карта", navProfile: "Профиль", txtMyTasks: "Мои задания", btnAccept: "Откликнуться", statusProcess: "В процессе" },
+        kz: { navHome: "Лента", navMap: "Карта", navProfile: "Профиль", txtMyTasks: "Тапсырмаларым", btnAccept: "Көмектесу", statusProcess: "Орындалуда" },
+        en: { navHome: "Feed", navMap: "Map", navProfile: "Profile", txtMyTasks: "My Tasks", btnAccept: "Accept", statusProcess: "In Progress" }
     };
 
     function updateLang() {
-        const lang = document.getElementById('langSwitcher').value;
-        const t = uiLang[lang];
-        
+        currentLang = document.getElementById('langSwitcher').value;
+        const t = ui[currentLang];
         document.getElementById('navHome').innerText = t.navHome;
         document.getElementById('navMap').innerText = t.navMap;
         document.getElementById('navProfile').innerText = t.navProfile;
-        document.getElementById('txtFeed').innerText = t.txtFeed;
-        document.getElementById('txtNextLvl').innerText = t.txtNextLvl;
-        document.getElementById('btnAccept').innerText = t.btnAccept;
-
-        renderFeed(lang);
+        document.getElementById('txtMyTasks').innerText = t.txtMyTasks;
+        renderFeed('Все');
+        renderMyTasks();
     }
 
-    function renderFeed(lang) {
+    function renderFeed(filter = 'Все') {
         const container = document.getElementById('feedContainer');
-        container.innerHTML = taskData.map(task => `
+        const filtered = filter === 'Все' ? taskData : taskData.filter(t => t.cat === filter);
+        
+        container.innerHTML = filtered.map(task => `
             <div class="req-card" onclick="openTask(${task.id})">
                 <div class="req-icon">${task.icon}</div>
                 <div class="req-content">
-                    <div class="req-title">${task[lang]}</div>
-                    <div class="req-meta">${task.cat} • ~300м</div>
+                    <div class="req-title">${task[currentLang]}</div>
+                    <div class="req-meta">${task.cat} • ~200м</div>
                 </div>
             </div>
         `).join('');
     }
 
+    function filterModules(cat, btn) {
+        document.querySelectorAll('.module-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        renderFeed(cat);
+    }
+
     function openTask(id) {
-        const lang = document.getElementById('langSwitcher').value;
         const task = taskData.find(t => t.id === id);
-        document.getElementById('modalTitle').innerText = task[lang];
+        document.getElementById('modalTitle').innerText = task[currentLang];
         document.getElementById('modalDesc').innerText = task.desc;
-        document.getElementById('modalIcon').innerText = task.icon;
         document.getElementById('taskModal').style.display = 'flex';
+        document.getElementById('btnAcceptAction').onclick = () => acceptTask(id);
     }
 
-    function closeModal(e) { document.getElementById('taskModal').style.display = 'none'; }
+    function acceptTask(id) {
+        const task = taskData.find(t => t.id === id);
+        if(!myTasks.find(t => t.id === id)) {
+            myTasks.push({...task, status: 'process'});
+            alert("Задание добавлено в ваш профиль!");
+        }
+        document.getElementById('taskModal').style.display = 'none';
+        renderMyTasks();
+    }
 
-    function showScreen(screenId, navEl) {
+    function renderMyTasks() {
+        const container = document.getElementById('myTasksContainer');
+        if(myTasks.length === 0) {
+            container.innerHTML = '<p style="text-align:center; font-size:0.8rem; color:#999;">Нет активных задач</p>';
+            return;
+        }
+        container.innerHTML = myTasks.map(task => `
+            <div class="req-card">
+                <div class="req-icon">${task.icon}</div>
+                <div class="req-content">
+                    <div class="req-title">${task[currentLang]}</div>
+                    <div class="req-meta">${task.cat}</div>
+                </div>
+                <span class="status-badge status-process">${ui[currentLang].statusProcess}</span>
+            </div>
+        `).join('');
+    }
+
+    function showScreen(id, el) {
         document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-        document.getElementById(screenId).classList.add('active');
+        document.getElementById(id).classList.add('active');
         document.querySelectorAll('.nav-link').forEach(n => n.classList.remove('active'));
-        navEl.classList.add('active');
+        el.classList.add('active');
     }
 
+    let map;
     function initMap() {
         if (map) return;
-        // Координаты Талдыкоргана
         map = L.map('mapDisplay').setView([45.015, 78.373], 14);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
-
-        taskData.forEach(task => {
-            const marker = L.marker([task.lat, task.lng]).addTo(map);
-            marker.on('click', () => openTask(task.id));
-        });
+        taskData.forEach(t => L.marker([t.lat, t.lng]).addTo(map).on('click', () => openTask(t.id)));
     }
 
     updateLang();
 </script>
-
 </body>
 </html>
