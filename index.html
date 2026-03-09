@@ -3,221 +3,274 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Help Hand - Final MVP</title>
+    <title>Help Hand - Super App</title>
+    
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    
     <style>
         :root {
             --primary: #4776E6;
-            --primary-gradient: linear-gradient(135deg, #4776E6 0%, #8E54E9 100%);
+            --accent: #8E54E9;
+            --gradient: linear-gradient(135deg, #4776E6 0%, #8E54E9 100%);
             --bg: #F8F9FD;
-            --card: #FFFFFF;
+            --white: #FFFFFF;
             --text: #2d3436;
-            --shadow: 0 10px 20px rgba(0,0,0,0.05);
+            --shadow: 0 12px 24px rgba(71, 118, 230, 0.15);
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        body { font-family: 'Manrope', sans-serif; background: var(--bg); color: var(--text); }
+        body { font-family: 'Manrope', sans-serif; background: var(--bg); color: var(--text); overflow: hidden; }
 
-        /* Auth */
-        #authScreen { position: fixed; inset: 0; background: var(--primary-gradient); z-index: 2000; display: flex; flex-direction: column; justify-content: center; padding: 30px; color: white; }
-        .auth-card { background: white; padding: 25px; border-radius: 25px; color: var(--text); }
-        .lang-bar { display: flex; justify-content: center; gap: 8px; margin-bottom: 20px; }
-        .l-btn { background: rgba(255,255,255,0.2); border: 1px solid white; color: white; padding: 4px 12px; border-radius: 15px; cursor: pointer; font-size: 0.7rem; }
-        .l-btn.active { background: white; color: var(--primary); font-weight: 800; }
+        /* Welcome Screen */
+        #authScreen { position: fixed; inset: 0; background: var(--gradient); z-index: 5000; display: flex; flex-direction: column; justify-content: center; padding: 30px; color: white; transition: 0.5s; }
+        .auth-card { background: white; padding: 30px; border-radius: 32px; color: var(--text); box-shadow: 0 20px 40px rgba(0,0,0,0.3); }
+        .lang-pills { display: flex; gap: 8px; margin-bottom: 25px; justify-content: center; }
+        .pill { background: rgba(255,255,255,0.2); border: 1.5px solid white; color: white; padding: 6px 18px; border-radius: 20px; cursor: pointer; font-weight: 800; font-size: 0.75rem; transition: 0.3s; }
+        .pill.active { background: white; color: var(--primary); }
 
-        /* Main App */
-        .app-container { max-width: 480px; margin: 0 auto; min-height: 100vh; display: none; padding-bottom: 90px; }
-        header { padding: 20px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; background: var(--bg); z-index: 100; }
+        /* Main Interface */
+        .app-shell { max-width: 480px; margin: 0 auto; height: 100vh; display: none; flex-direction: column; position: relative; }
         
-        .screen { display: none; padding: 0 20px; animation: fadeIn 0.3s ease; }
-        .screen.active { display: block; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        header { padding: 15px 20px; background: var(--white); display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.05); z-index: 10; }
+        .user-info { display: flex; align-items: center; gap: 10px; }
+        .xp-chip { background: var(--gradient); color: white; padding: 4px 12px; border-radius: 12px; font-size: 0.7rem; font-weight: 800; box-shadow: var(--shadow); }
 
-        /* Task Cards */
-        .req-card { background: var(--card); padding: 16px; border-radius: 22px; margin-bottom: 12px; display: flex; gap: 15px; box-shadow: var(--shadow); position: relative; }
-        .req-icon { width: 50px; height: 50px; border-radius: 15px; background: #f0f3ff; display: flex; align-items: center; justify-content: center; font-size: 1.3rem; }
-        .dist-badge { font-size: 0.65rem; color: var(--primary); font-weight: 800; display: block; margin-bottom: 2px; }
-        .price-badge { background: #e8f5e9; color: #2e7d32; padding: 4px 10px; border-radius: 10px; font-weight: 800; font-size: 0.8rem; margin-top: 5px; display: inline-block; }
-        .status-tag { position: absolute; top: 15px; right: 15px; font-size: 0.6rem; font-weight: 800; padding: 3px 8px; border-radius: 8px; }
+        /* Map Engine */
+        #map { flex-grow: 1; width: 100%; z-index: 1; }
 
-        /* Form */
-        input, textarea { width: 100%; padding: 14px; border-radius: 15px; border: 1px solid #eee; margin-bottom: 12px; font-family: inherit; }
-        .btn-main { background: var(--primary-gradient); color: white; border: none; width: 100%; padding: 16px; border-radius: 18px; font-weight: 700; cursor: pointer; }
+        /* Floating Task Feed (Uber Style) */
+        .task-sheet { position: absolute; bottom: 85px; left: 15px; right: 15px; max-height: 45vh; background: rgba(255,255,255,0.95); backdrop-filter: blur(10px); border-radius: 28px; z-index: 100; padding: 20px; overflow-y: auto; box-shadow: 0 -5px 30px rgba(0,0,0,0.1); border: 1px solid white; }
+        .sheet-handle { width: 40px; height: 5px; background: #dfe6e9; border-radius: 10px; margin: 0 auto 15px; }
 
-        /* Nav */
-        nav { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 480px; background: white; display: flex; justify-content: space-around; padding: 12px 0 25px; border-top: 1px solid #eee; z-index: 1000; }
-        .nav-link { text-align: center; color: #b2bec3; font-size: 0.6rem; font-weight: 700; cursor: pointer; }
-        .nav-link.active { color: var(--primary); }
+        /* Cards & Logic */
+        .task-card { background: white; padding: 16px; border-radius: 20px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #f1f2f6; box-shadow: 0 4px 10px rgba(0,0,0,0.02); transition: 0.3s; }
+        .task-card:active { transform: scale(0.97); }
+        .cat-icon { width: 45px; height: 45px; background: #f0f3ff; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; }
+        .price-badge { background: #e8f5e9; color: #2ecc71; padding: 6px 14px; border-radius: 14px; font-weight: 800; font-size: 0.85rem; }
+        .dist-txt { font-size: 0.65rem; color: var(--primary); font-weight: 800; text-transform: uppercase; margin-bottom: 3px; display: block; }
+
+        /* Gamification Screen */
+        .profile-view { padding: 25px; text-align: center; }
+        .progress-box { width: 100%; height: 12px; background: #eee; border-radius: 10px; margin: 20px 0; overflow: hidden; }
+        .progress-fill { height: 100%; background: var(--gradient); width: 0%; transition: 1s cubic-bezier(0.22, 1, 0.36, 1); }
+
+        /* Nav Bar */
+        nav { height: 75px; background: white; display: flex; justify-content: space-around; align-items: center; border-top: 1px solid #eee; padding-bottom: env(safe-area-inset-bottom); }
+        .nav-item { flex: 1; text-align: center; color: #b2bec3; cursor: pointer; font-size: 0.65rem; font-weight: 800; transition: 0.3s; }
+        .nav-item.active { color: var(--primary); }
+        .nav-item span { display: block; font-size: 1.4rem; margin-bottom: 2px; }
+
+        /* Modals */
+        .modal { position: fixed; inset: 0; background: white; z-index: 2000; padding: 30px; display: none; flex-direction: column; }
+        .modal.active { display: flex; }
+        input, select, textarea { width: 100%; padding: 16px; border-radius: 18px; border: 1.5px solid #eee; margin-bottom: 15px; font-family: inherit; font-size: 1rem; outline: none; }
+        input:focus { border-color: var(--primary); }
+        .btn-prime { background: var(--gradient); color: white; border: none; padding: 18px; border-radius: 20px; font-weight: 800; font-size: 1rem; cursor: pointer; box-shadow: var(--shadow); }
+
+        .hidden { display: none !important; }
     </style>
 </head>
 <body>
 
 <div id="authScreen">
-    <div class="lang-bar">
-        <button class="l-btn active" onclick="setLang('ru', this)">RU</button>
-        <button class="l-btn" onclick="setLang('kz', this)">KZ</button>
-        <button class="l-btn" onclick="setLang('en', this)">EN</button>
+    <div class="lang-pills">
+        <div class="pill active" onclick="setLang('ru', this)">RU</div>
+        <div class="pill" onclick="setLang('kz', this)">KZ</div>
+        <div class="pill" onclick="setLang('en', this)">EN</div>
     </div>
     <div class="auth-card">
-        <h2 id="t-welcome" style="margin-bottom:15px">Добро пожаловать</h2>
-        <input type="text" id="userName" placeholder="Имя / Name">
-        <select id="userRole" style="width:100%; padding:14px; border-radius:15px; border:1px solid #eee; margin-bottom:12px;">
-            <option value="volunteer" id="opt-vol">Волонтер</option>
-            <option value="creator" id="opt-cre">Заказчик</option>
+        <h1 id="t-brand" style="font-weight: 800; margin-bottom: 10px; letter-spacing: -1.5px; font-size: 2rem; color: var(--primary)">Help Hand</h1>
+        <p id="t-motto" style="color: #636e72; font-size: 0.85rem; margin-bottom: 25px;">Uber для добрых дел в Талдыкоргане</p>
+        <input type="text" id="regName" placeholder="Как вас зовут?">
+        <select id="regRole">
+            <option value="vol" id="t-vol">Я волонтер (Помогаю)</option>
+            <option value="cre" id="t-cre">Мне нужна помощь</option>
         </select>
-        <button class="btn-main" onclick="startApp()" id="t-start">Начать</button>
+        <button class="btn-prime" style="width: 100%" onclick="enterApp()" id="t-enter">Начать помогать</button>
     </div>
 </div>
 
-<div class="app-container" id="mainApp">
+<div class="app-shell" id="app">
     <header>
-        <div style="font-weight:900; color:var(--primary)">HELP HAND</div>
-        <div id="xpBadge" style="font-size:0.7rem; font-weight:800; background:#f0f3ff; padding:5px 12px; border-radius:10px">LVL 1 • 0 XP</div>
+        <div class="user-info">
+            <div id="uAvatar" style="width: 35px; height: 35px; border-radius: 50%; background: #eee; overflow: hidden;"></div>
+            <div class="xp-chip" id="xpDisplay">LVL 1 • 0 XP</div>
+        </div>
+        <div style="font-weight: 800; font-size: 0.9rem; opacity: 0.5;">Taldykorgan</div>
     </header>
 
-    <div id="home" class="screen active">
-        <h3 id="t-feed" style="margin-bottom:15px">Задания рядом</h3>
-        <div id="feed"></div>
+    <div id="map"></div>
+
+    <div class="task-sheet" id="homeView">
+        <div class="sheet-handle"></div>
+        <h3 id="t-near" style="margin-bottom: 15px; font-weight: 800;">Задания рядом</h3>
+        <div id="feedContainer"></div>
     </div>
 
-    <div id="map" class="screen" style="padding:0; height:75vh;">
-        <div id="mapDisplay" style="width:100%; height:100%"></div>
+    <div id="profileView" class="screen modal">
+        <h2 id="p-name">Username</h2>
+        <div class="progress-box"><div class="progress-fill" id="xpBar"></div></div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 20px;">
+            <div style="background: #f1f2f6; padding: 15px; border-radius: 20px;">
+                <h4 id="t-stat1">Помог</h4>
+                <div style="font-size: 1.5rem; font-weight: 800; color: var(--primary);" id="statCount">0</div>
+            </div>
+            <div style="background: #f1f2f6; padding: 15px; border-radius: 20px;">
+                <h4 id="t-stat2">Рейтинг</h4>
+                <div style="font-size: 1.5rem; font-weight: 800; color: #f1c40f;">5.0</div>
+            </div>
+        </div>
+        <div style="flex-grow: 1;"></div>
+        <button class="btn-prime" style="background: #fab1a0; box-shadow: none;" onclick="location.reload()">Выйти</button>
+        <button class="btn-prime" style="background: none; color: #636e72; box-shadow: none;" onclick="closeProfile()">Назад</button>
     </div>
 
-    <div id="create" class="screen">
-        <h3 id="t-create" style="margin-bottom:15px">Новая просьба</h3>
+    <div id="createModal" class="modal">
+        <h2 id="t-new-task">Создать заявку</h2>
         <input type="text" id="taskTitle" placeholder="Что нужно сделать?">
-        <textarea id="taskDesc" placeholder="Детали..."></textarea>
-        <input type="number" id="taskPrice" placeholder="Цена (₸)">
-        <button class="btn-main" onclick="addTask()" id="t-post">Опубликовать</button>
-    </div>
-
-    <div id="profile" class="screen">
-        <h2 id="u-name">User</h2>
-        <div style="background:#eee; height:8px; border-radius:4px; margin:15px 0"><div id="xpBar" style="background:var(--primary-gradient); height:100%; width:0%; border-radius:4px; transition:1s"></div></div>
-        <button class="btn-main" style="background:#f1f2f6; color:#000; margin-top:20px" onclick="location.reload()">Выход</button>
+        <textarea id="taskDesc" rows="3" placeholder="Детали..."></textarea>
+        <input type="number" id="taskPrice" placeholder="Цена в тенге (₸)">
+        <div style="flex-grow: 1;"></div>
+        <button class="btn-prime" onclick="confirmTask()" id="t-pub">Опубликовать в InDrive</button>
+        <button onclick="closeModal()" style="padding: 15px; background: none; border: none; font-weight: 800; color: #b2bec3;">Отмена</button>
     </div>
 
     <nav>
-        <div class="nav-link active" onclick="showScreen('home', this)"><i>📋</i><span id="n-feed">Лента</span></div>
-        <div class="nav-link" onclick="showScreen('map', this); initMap();"><i>📍</i><span id="n-map">Карта</span></div>
-        <div class="nav-link" id="navCreate" onclick="showScreen('create', this)"><i>➕</i><span id="n-add">Создать</span></div>
-        <div class="nav-link" onclick="showScreen('profile', this)"><i>👤</i><span id="n-prof">Профиль</span></div>
+        <div class="nav-item active" onclick="tab('home')"><span>📍</span><p id="n-map">Карта</p></div>
+        <div class="nav-item" id="navAdd" onclick="showModal()"><span>➕</span><p id="n-add">Создать</p></div>
+        <div class="nav-item" onclick="showProfile()"><span>👤</span><p id="n-prof">Профиль</p></div>
     </nav>
 </div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
-    let curLang = 'ru';
-    let user = { name: "", role: "", xp: 0 };
+    let currentLang = 'ru';
+    let user = JSON.parse(localStorage.getItem('hh_user')) || { name: "", role: "", xp: 0, level: 1, helped: 0 };
+    
     let tasks = [
-        { id: 1, title: "Купить лекарства", owner: "Мария", price: 800, lat: 45.018, lng: 78.375, status: 'open' },
-        { id: 2, title: "Помощь с сумками", owner: "Даулет", price: 500, lat: 45.012, lng: 78.368, status: 'open' }
+        { id: 1, title: "Купить молоко и хлеб", price: 500, lat: 45.018, lng: 78.375, icon: "🛒", status: "open", dist: "350м" },
+        { id: 2, title: "Помочь донести пакеты", price: 1000, lat: 45.012, lng: 78.368, icon: "📦", status: "open", dist: "1.2км" }
     ];
 
     const i18n = {
-        ru: { welcome: "Добро пожаловать", start: "Начать", feed: "Задания рядом", create: "Новая просьба", post: "Опубликовать", n1: "Лента", n2: "Карта", n3: "Создать", n4: "Профиль", vol: "Волонтер", cre: "Заказчик", dist: "от вас", from: "От" },
-        kz: { welcome: "Қош келдіңіз", start: "Бастау", feed: "Тапсырмалар", create: "Жаңа өтініш", post: "Жариялау", n1: "Таспа", n2: "Карта", n3: "Қосу", n4: "Профиль", vol: "Волонтер", cre: "Тапсырысшы", dist: "сізден", from: "Кімнен" },
-        en: { welcome: "Welcome", start: "Start", feed: "Nearby Tasks", create: "New Request", post: "Post", n1: "Feed", n2: "Map", n3: "Create", n4: "Profile", vol: "Volunteer", cre: "Customer", dist: "away", from: "From" }
+        ru: { vol: "Я волонтер", cre: "Мне нужна помощь", enter: "Начать", near: "Задания рядом", n_map: "Карта", n_add: "Создать", n_prof: "Профиль", pub: "Опубликовать", new: "Новая просьба", take: "Взять заказ", stat1: "Помог", stat2: "Рейтинг" },
+        kz: { vol: "Мен волонтермін", cre: "Маған көмек керек", enter: "Бастау", near: "Тапсырмалар", n_map: "Карта", n_add: "Қосу", n_prof: "Профиль", pub: "Жариялау", new: "Жаңа өтініш", take: "Көмектесу", stat1: "Көмектесті", stat2: "Рейтинг" },
+        en: { vol: "I'm a volunteer", cre: "I need help", enter: "Start", near: "Nearby Tasks", n_map: "Map", n_add: "Create", n_prof: "Profile", pub: "Publish", new: "New Request", take: "Help Now", stat1: "Helped", stat2: "Rating" }
     };
 
     function setLang(l, btn) {
-        curLang = l;
-        document.querySelectorAll('.l-btn').forEach(b => b.classList.remove('active'));
+        currentLang = l;
+        document.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
         btn.classList.add('active');
-        updateUI();
+        applyLang();
     }
 
-    function updateUI() {
-        const t = i18n[curLang];
-        document.getElementById('t-welcome').innerText = t.welcome;
-        document.getElementById('t-start').innerText = t.start;
-        document.getElementById('t-feed').innerText = t.feed;
-        document.getElementById('t-create').innerText = t.create;
-        document.getElementById('t-post').innerText = t.post;
-        document.getElementById('n-feed').innerText = t.n1;
-        document.getElementById('n-map').innerText = t.n2;
-        document.getElementById('n-add').innerText = t.n3;
-        document.getElementById('n-prof').innerText = t.n4;
-        document.getElementById('opt-vol').innerText = t.vol;
-        document.getElementById('opt-cre').innerText = t.cre;
+    function applyLang() {
+        const t = i18n[currentLang];
+        document.getElementById('t-vol').innerText = t.vol;
+        document.getElementById('t-cre').innerText = t.cre;
+        document.getElementById('t-enter').innerText = t.enter;
+        document.getElementById('t-near').innerText = t.near;
+        document.getElementById('n-map').innerText = t.n_map;
+        document.getElementById('n-add').innerText = t.n_add;
+        document.getElementById('n-prof').innerText = t.n_prof;
+        document.getElementById('t-pub').innerText = t.pub;
+        document.getElementById('t-new-task').innerText = t.new;
+        document.getElementById('t-stat1').innerText = t.stat1;
+        document.getElementById('t-stat2').innerText = t.stat2;
         renderFeed();
     }
 
-    function startApp() {
-        user.name = document.getElementById('userName').value || "User";
-        user.role = document.getElementById('userRole').value;
-        document.getElementById('u-name').innerText = user.name;
-        if(user.role === 'volunteer') document.getElementById('navCreate').style.display = 'none';
-        document.getElementById('authScreen').style.display = 'none';
-        document.getElementById('mainApp').style.display = 'block';
-        updateUI();
+    let map;
+    function enterApp() {
+        user.name = document.getElementById('regName').value || "Guest";
+        user.role = document.getElementById('regRole').value;
+        if(user.role === 'vol') document.getElementById('navAdd').classList.add('hidden');
+        
+        document.getElementById('authScreen').style.opacity = '0';
+        setTimeout(() => {
+            document.getElementById('authScreen').style.display = 'none';
+            document.getElementById('app').style.display = 'flex';
+            document.getElementById('p-name').innerText = user.name;
+            document.getElementById('uAvatar').innerHTML = `<img src="https://api.dicebear.com/7.x/avataaars/svg?seed=${user.name}" style="width:100%">`;
+            initMap();
+            updateXP();
+            applyLang();
+        }, 500);
+    }
+
+    function initMap() {
+        map = L.map('map', { zoomControl: false }).setView([45.015, 78.373], 14);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+        renderMarkers();
+    }
+
+    function renderMarkers() {
+        tasks.forEach(t => {
+            L.marker([t.lat, t.lng]).addTo(map).bindPopup(`<b>${t.title}</b><br>${t.price} ₸`);
+        });
     }
 
     function renderFeed() {
-        const container = document.getElementById('feed');
-        const t = i18n[curLang];
-        container.innerHTML = tasks.map(task => {
-            // Симуляция расстояния: генерим число от 100 до 900 метров
-            const fakeDist = Math.floor(Math.random() * 800) + 100;
-            return `
-                <div class="req-card" onclick="takeTask(${task.id})">
-                    <div class="req-icon">🤝</div>
-                    <div style="flex:1">
-                        <span class="dist-badge">📍 ${fakeDist}m ${t.dist}</span>
-                        <div style="font-weight:800; font-size:0.9rem">${task.title}</div>
-                        <div style="font-size:0.7rem; color:#666">${t.from}: ${task.owner}</div>
-                        <div class="price-badge">${task.price} ₸</div>
-                    </div>
-                    <span class="status-tag" style="background:${task.status==='open'?'#e3f2fd':'#fff3e0'}">
-                        ${task.status === 'open' ? 'OPEN' : 'WORK'}
-                    </span>
+        const feed = document.getElementById('feedContainer');
+        const t = i18n[currentLang];
+        feed.innerHTML = tasks.filter(x => x.status === 'open').map(item => `
+            <div class="task-card" onclick="interactTask(${item.id})">
+                <div class="cat-icon">${item.icon}</div>
+                <div style="flex:1; margin-left:15px">
+                    <span class="dist-badge dist-txt">📍 ${item.dist}</span>
+                    <h4 style="font-weight:800; font-size:0.9rem">${item.title}</h4>
+                    <p style="font-size:0.7rem; color:#636e72">${t.take}</p>
                 </div>
-            `;
-        }).reverse().join('');
+                <div class="price-badge">${item.price} ₸</div>
+            </div>
+        `).join('');
     }
 
-    function addTask() {
+    function interactTask(id) {
+        if(user.role !== 'vol') return;
+        const task = tasks.find(x => x.id === id);
+        task.status = 'taken';
+        user.xp += 35;
+        user.helped++;
+        if(user.xp >= 100) { user.level++; user.xp = 0; }
+        updateXP();
+        alert(currentLang === 'kz' ? "Тапсырма қабылданды!" : "Задание принято!");
+        renderFeed();
+    }
+
+    function updateXP() {
+        document.getElementById('xpDisplay').innerText = `LVL ${user.level} • ${user.xp} XP`;
+        document.getElementById('xpBar').style.width = user.xp + "%";
+        document.getElementById('statCount').innerText = user.helped;
+        localStorage.setItem('hh_user', JSON.stringify(user));
+    }
+
+    function showModal() { document.getElementById('createModal').classList.add('active'); }
+    function closeModal() { document.getElementById('createModal').classList.remove('active'); }
+    function showProfile() { document.getElementById('profileView').classList.add('active'); }
+    function closeProfile() { document.getElementById('profileView').classList.remove('active'); }
+
+    function confirmTask() {
         const title = document.getElementById('taskTitle').value;
         const price = document.getElementById('taskPrice').value;
         if(!title || !price) return;
         tasks.push({
-            id: Date.now(), title, price, owner: user.name,
+            id: Date.now(), title, price, status: 'open',
             lat: 45.015 + (Math.random()-0.5)*0.02,
             lng: 78.373 + (Math.random()-0.5)*0.02,
-            status: 'open'
+            icon: "💡", dist: "0.1км"
         });
-        showScreen('home', document.querySelector('nav div:first-child'));
-        updateUI();
+        renderMarkers();
+        renderFeed();
+        closeModal();
     }
 
-    function takeTask(id) {
-        if(user.role !== 'volunteer') return;
-        const task = tasks.find(t => t.id === id);
-        if(task.status === 'open') {
-            task.status = 'taken';
-            user.xp += 25;
-            document.getElementById('xpBadge').innerText = `LVL 1 • ${user.xp} XP`;
-            document.getElementById('xpBar').style.width = user.xp + "%";
-            alert("Вы взяли задание! +25 XP");
-            renderFeed();
-        }
-    }
-
-    function showScreen(id, el) {
-        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-        document.getElementById(id).classList.add('active');
-        document.querySelectorAll('.nav-link').forEach(n => n.classList.remove('active'));
-        el.classList.add('active');
-    }
-
-    let map;
-    function initMap() {
-        if (map) map.remove();
-        map = L.map('mapDisplay').setView([45.015, 78.373], 14);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
-        tasks.forEach(t => L.marker([t.lat, t.lng]).addTo(map).bindPopup(`<b>${t.title}</b><br>${t.price} ₸`));
+    function tab(name) {
+        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+        event.currentTarget.classList.add('active');
+        if(name === 'home') document.getElementById('homeView').style.display = 'block';
     }
 </script>
 </body>
