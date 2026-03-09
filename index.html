@@ -3,13 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Help Hand - Multilingual MVP</title>
+    <title>Help Hand - Final Prototype</title>
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
         :root {
             --primary: #4776E6;
             --primary-gradient: linear-gradient(135deg, #4776E6 0%, #8E54E9 100%);
+            --success: #00b894;
+            --warning: #f1c40f;
             --bg: #F8F9FD;
             --card: #FFFFFF;
             --text-main: #2d3436;
@@ -18,204 +20,234 @@
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        body { font-family: 'Manrope', sans-serif; background: var(--bg); color: var(--text-main); }
+        body { font-family: 'Manrope', sans-serif; background: var(--bg); color: var(--text-main); overflow-x: hidden; }
 
-        /* Auth Screen */
-        #authScreen {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: var(--primary-gradient); z-index: 3000;
-            display: flex; flex-direction: column; justify-content: center; padding: 40px; color: white;
-        }
+        .app-container { max-width: 480px; margin: 0 auto; min-height: 100vh; padding-bottom: 90px; }
 
-        .auth-card { background: white; padding: 30px; border-radius: 24px; color: var(--text-main); }
-        .lang-selector { display: flex; gap: 5px; margin-bottom: 20px; justify-content: center; }
-        .lang-btn { padding: 5px 12px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.3); color: white; cursor: pointer; font-size: 0.7rem; }
+        /* Auth & Lang */
+        #authScreen { position: fixed; inset: 0; background: var(--primary-gradient); z-index: 2000; display: flex; flex-direction: column; justify-content: center; padding: 30px; color: white; }
+        .auth-card { background: white; padding: 25px; border-radius: 25px; color: var(--text-main); box-shadow: 0 15px 30px rgba(0,0,0,0.2); }
+        .lang-switch { display: flex; justify-content: center; gap: 10px; margin-bottom: 20px; }
+        .lang-btn { background: rgba(255,255,255,0.2); border: 1px solid white; color: white; padding: 5px 15px; border-radius: 20px; cursor: pointer; font-size: 0.8rem; }
         .lang-btn.active { background: white; color: var(--primary); font-weight: 800; }
 
-        .role-selector { display: flex; gap: 10px; margin: 15px 0; }
-        .role-btn { flex: 1; padding: 12px; border: 2px solid #eee; border-radius: 12px; cursor: pointer; text-align: center; font-weight: 700; font-size: 0.8rem; }
-        .role-btn.active { border-color: var(--primary); background: #f0f3ff; color: var(--primary); }
+        /* Header */
+        header { padding: 20px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; background: var(--bg); z-index: 100; }
+        .logo { font-weight: 800; font-size: 1.3rem; background: var(--primary-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .xp-badge { background: #f0f3ff; color: var(--primary); padding: 5px 12px; border-radius: 12px; font-size: 0.7rem; font-weight: 800; border: 1px solid #e0e7ff; }
 
-        /* Main Layout */
-        .app-container { max-width: 480px; margin: 0 auto; min-height: 100vh; padding-bottom: 90px; display: none; }
-        header { padding: 20px; display: flex; justify-content: space-between; align-items: center; background: var(--bg); position: sticky; top: 0; z-index: 1000; }
-        
+        /* Screens */
         .screen { display: none; padding: 0 20px; animation: fadeIn 0.3s ease; }
         .screen.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        input, textarea { width: 100%; padding: 12px; border-radius: 12px; border: 1px solid #eee; margin-bottom: 10px; font-family: inherit; }
-        .btn-main { background: var(--primary-gradient); color: white; border: none; width: 100%; padding: 15px; border-radius: 15px; font-weight: 700; cursor: pointer; }
+        /* Cards */
+        .req-card { background: var(--card); padding: 16px; border-radius: 20px; margin-bottom: 12px; display: flex; gap: 15px; box-shadow: var(--shadow); position: relative; border: 1px solid transparent; transition: 0.2s; }
+        .req-card.my-task { border-color: var(--primary); }
+        .req-icon { width: 50px; height: 50px; border-radius: 15px; background: #f0f3ff; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; }
+        .price-tag { display: inline-block; margin-top: 8px; background: #e8f5e9; color: #2e7d32; padding: 4px 10px; border-radius: 10px; font-weight: 800; font-size: 0.8rem; }
+        .status-badge { position: absolute; top: 15px; right: 15px; font-size: 0.6rem; padding: 3px 8px; border-radius: 8px; font-weight: 800; text-transform: uppercase; }
 
+        /* Forms */
+        .module-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 15px 0; }
+        .module-item { background: white; padding: 12px; border-radius: 15px; text-align: center; border: 2px solid #eee; cursor: pointer; font-size: 0.7rem; font-weight: 700; transition: 0.2s; }
+        .module-item.selected { border-color: var(--primary); background: #f0f3ff; color: var(--primary); }
+        input, textarea { width: 100%; padding: 14px; border-radius: 15px; border: 1px solid #eee; margin-bottom: 12px; font-family: inherit; font-size: 0.9rem; outline: none; }
+        .btn-main { background: var(--primary-gradient); color: white; border: none; width: 100%; padding: 16px; border-radius: 18px; font-weight: 700; cursor: pointer; box-shadow: 0 5px 15px rgba(71, 118, 230, 0.3); }
+
+        /* Profile & XP */
+        .xp-bar-bg { background: #eee; height: 12px; border-radius: 6px; margin: 15px 0; overflow: hidden; }
+        .xp-bar-fill { background: var(--primary-gradient); height: 100%; width: 0%; transition: 1s cubic-bezier(0.17, 0.67, 0.83, 0.67); }
+
+        /* Nav */
         nav { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 480px; background: white; display: flex; justify-content: space-around; padding: 12px 0 25px; border-top: 1px solid #eee; z-index: 1000; }
-        .nav-link { text-align: center; color: #b2bec3; font-size: 0.6rem; font-weight: 700; cursor: pointer; transition: 0.3s; }
+        .nav-link { text-align: center; color: #b2bec3; font-size: 0.6rem; font-weight: 700; cursor: pointer; }
         .nav-link.active { color: var(--primary); }
-        .nav-link i { font-size: 1.3rem; display: block; }
-
-        .req-card { background: var(--card); padding: 16px; border-radius: 20px; margin-bottom: 12px; display: flex; gap: 15px; box-shadow: var(--shadow); }
+        .nav-link i { font-size: 1.4rem; display: block; margin-bottom: 3px; }
     </style>
 </head>
 <body>
 
 <div id="authScreen">
-    <div class="lang-selector">
+    <div class="lang-switch">
         <div class="lang-btn active" onclick="changeLang('ru', this)">RU</div>
         <div class="lang-btn" onclick="changeLang('kz', this)">KZ</div>
         <div class="lang-btn" onclick="changeLang('en', this)">EN</div>
     </div>
-    <h1 style="text-align:center; margin-bottom: 30px; letter-spacing: -1px;" id="authTitle">Help Hand</h1>
-    
     <div class="auth-card">
-        <label id="lblEnterName" style="font-weight: 800; font-size: 0.8rem;">Как вас зовут?</label>
-        <input type="text" id="regName" placeholder="...">
-        
-        <label id="lblWhoAreYou" style="font-weight: 800; font-size: 0.8rem; margin-top: 10px; display: block;">Кто вы?</label>
-        <div class="role-selector">
-            <div class="role-btn active" id="btnRoleVol" onclick="setRole('volunteer', this)">Волонтер</div>
-            <div class="role-btn" id="btnRoleCre" onclick="setRole('creator', this)">Заказчик</div>
-        </div>
-        
-        <button class="btn-main" id="btnStart" onclick="handleAuth()">Начать</button>
+        <h2 id="t-welcome" style="margin-bottom:20px">Добро пожаловать</h2>
+        <input type="text" id="userName" placeholder="Ваше имя">
+        <select id="userRole" style="width:100%; padding:14px; border-radius:15px; border:1px solid #eee; margin-bottom:12px;">
+            <option value="volunteer">Волонтер (Помогаю)</option>
+            <option value="creator">Заказчик (Нужна помощь)</option>
+        </select>
+        <button class="btn-main" onclick="startApp()">Войти</button>
     </div>
 </div>
 
-<div class="app-container" id="mainApp">
+<div class="app-container" id="mainApp" style="display:none">
     <header>
-        <div style="font-weight: 900; font-size: 1.2rem; color: var(--primary);">Help Hand</div>
-        <div id="userBadge" style="font-size: 0.6rem; font-weight: 800; padding: 4px 10px; background: #e0e7ff; border-radius: 8px;"></div>
+        <div class="logo">Help Hand</div>
+        <div class="xp-badge" id="xpDisplay">LVL 1 • 0 XP</div>
     </header>
 
     <div id="home" class="screen active">
-        <h3 style="margin-bottom:15px;" id="txtFeedTitle">Задания рядом</h3>
+        <h3 id="t-feed-title" style="margin-bottom:15px">Задания рядом</h3>
         <div id="feedContainer"></div>
     </div>
 
+    <div id="map" class="screen" style="padding:0; height:75vh;">
+        <div id="mapDisplay" style="width:100%; height:100%"></div>
+    </div>
+
     <div id="create" class="screen">
-        <h3 style="margin-bottom:20px;" id="txtCreateTitle">Новая просьба</h3>
-        <input type="text" id="taskTitle" placeholder="">
-        <textarea id="taskDesc" placeholder=""></textarea>
-        <button class="btn-main" id="btnPublish" onclick="createNewTask()">Опубликовать</button>
+        <h3 id="t-create-title" style="margin-bottom:15px">Новая просьба</h3>
+        <div class="module-grid">
+            <div class="module-item selected" onclick="pickModule('Быт', '🏠', this)">🏠<br>Быт</div>
+            <div class="module-item" onclick="pickModule('Здоровье', '💊', this)">💊<br>Здоровье</div>
+            <div class="module-item" onclick="pickModule('Транспорт', '🚗', this)">🚗<br>Трансп.</div>
+        </div>
+        <input type="text" id="taskTitle" placeholder="Что нужно сделать?">
+        <textarea id="taskDesc" placeholder="Детали..."></textarea>
+        <input type="number" id="taskPrice" placeholder="Предложите цену (₸)">
+        <button class="btn-main" onclick="createTask()" id="t-btn-publish">Опубликовать</button>
     </div>
 
     <div id="profile" class="screen">
-        <div class="user-info" style="display:flex; align-items:center; gap:15px; margin-bottom:20px;">
-            <div id="profileAvatar" style="width:50px; height:50px; border-radius:50%; background:#eee; overflow:hidden;"></div>
-            <div><h2 id="displayProfileName">Name</h2><p id="displayProfileRole" style="font-size:0.7rem; color:var(--text-sub)"></p></div>
+        <div style="display:flex; align-items:center; gap:15px; margin-bottom:20px">
+            <div id="avatar" style="width:60px; height:60px; border-radius:50%; background:#eee; overflow:hidden"></div>
+            <div>
+                <h2 id="p-name">Имя</h2>
+                <p id="p-role" style="font-size:0.7rem; color:var(--text-sub)"></p>
+            </div>
         </div>
-        <button class="btn-main" style="background: #f1f2f6; color: #2d3436;" onclick="location.reload()" id="btnLogout">Выйти</button>
+        <div class="xp-bar-bg"><div class="xp-bar-fill" id="xpBar"></div></div>
+        <h4 id="t-my-tasks" style="margin-bottom:10px">Мои задания</h4>
+        <div id="myTasksContainer"></div>
+        <button class="btn-main" style="margin-top:20px; background:#f1f2f6; color:#333; box-shadow:none" onclick="location.reload()">Выйти</button>
     </div>
 
     <nav>
-        <div class="nav-link active" onclick="showScreen('home', this)"><i id="iconHome">📋</i><span id="navHome">Лента</span></div>
-        <div class="nav-link" id="navCreateBtn" onclick="showScreen('create', this)"><i id="iconCreate">➕</i><span id="navCreate">Создать</span></div>
-        <div class="nav-link" onclick="showScreen('profile', this)"><i id="iconProfile">👤</i><span id="navProfile">Профиль</span></div>
+        <div class="nav-link active" onclick="showScreen('home', this)"><i>📋</i><span id="n-home">Лента</span></div>
+        <div class="nav-link" onclick="showScreen('map', this); initMap();"><i>📍</i><span id="n-map">Карта</span></div>
+        <div class="nav-link" id="navCreateBtn" onclick="showScreen('create', this)"><i>➕</i><span id="n-create">Создать</span></div>
+        <div class="nav-link" onclick="showScreen('profile', this)"><i>👤</i><span id="n-profile">Профиль</span></div>
     </nav>
 </div>
 
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
-    let currentLang = 'ru';
-    let currentUser = { name: "", role: "volunteer" };
-    
-    const translations = {
-        ru: {
-            authTitle: "Help Hand", lblEnterName: "Как вас зовут?", lblWhoAreYou: "Кто вы?", 
-            btnRoleVol: "Волонтер", btnRoleCre: "Заказчик", btnStart: "Начать",
-            txtFeedTitle: "Задания рядом", txtCreateTitle: "Новая просьба", btnPublish: "Опубликовать",
-            navHome: "Лента", navCreate: "Создать", navProfile: "Профиль", btnLogout: "Выйти",
-            badgeVol: "ВОЛОНТЕР", badgeCre: "ЗАКАЗЧИК", welcome: "Добро пожаловать", 
-            phTitle: "Что нужно сделать?", phDesc: "Детали и адрес...", from: "От"
-        },
-        kz: {
-            authTitle: "Help Hand", lblEnterName: "Есіміңіз кім?", lblWhoAreYou: "Сіз кімсіз?", 
-            btnRoleVol: "Волонтер", btnRoleCre: "Тапсырыс беруші", btnStart: "Бастау",
-            txtFeedTitle: "Жақын жердегі тапсырмалар", txtCreateTitle: "Жаңа өтініш", btnPublish: "Жариялау",
-            navHome: "Таспа", navCreate: "Қосу", navProfile: "Профиль", btnLogout: "Шығу",
-            badgeVol: "ВОЛОНТЕР", badgeCre: "ТАПСЫРЫСШЫ", welcome: "Қош келдіңіз",
-            phTitle: "Не істеу керек?", phDesc: "Толығырақ және мекен-жайы...", from: "Кімнен"
-        },
-        en: {
-            authTitle: "Help Hand", lblEnterName: "What's your name?", lblWhoAreYou: "Who are you?", 
-            btnRoleVol: "Volunteer", btnRoleCre: "Customer", btnStart: "Start",
-            txtFeedTitle: "Tasks nearby", txtCreateTitle: "New request", btnPublish: "Post",
-            navHome: "Feed", navCreate: "Create", navProfile: "Profile", btnLogout: "Logout",
-            badgeVol: "VOLUNTEER", badgeCre: "CUSTOMER", welcome: "Welcome",
-            phTitle: "What needs to be done?", phDesc: "Details and address...", from: "From"
-        }
+    let curLang = 'ru';
+    let user = { name: "", role: "", xp: 0, level: 1 };
+    let tasks = [
+        { id: 1, title: "Полить цветы", desc: "6 этаж", price: "500", cat: "Быт", icon: "🏠", owner: "Аружан", status: "open", lat: 45.015, lng: 78.373 }
+    ];
+    let selectedModule = { cat: "Быт", icon: "🏠" };
+
+    const lang = {
+        ru: { welcome: "Добро пожаловать", feed: "Задания рядом", create: "Новая просьба", n1: "Лента", n2: "Карта", n3: "Создать", n4: "Профиль", price: "Цена", from: "От", take: "Помочь", publish: "Опубликовать", my: "Мои задания", statusOpen: "Открыто", statusProg: "В процессе" },
+        kz: { welcome: "Қош келдіңіз", feed: "Тапсырмалар", create: "Жаңа өтініш", n1: "Таспа", n2: "Карта", n3: "Қосу", n4: "Профиль", price: "Бағасы", from: "Кімнен", take: "Көмектесу", publish: "Жариялау", my: "Менің тапсырмаларым", statusOpen: "Ашық", statusProg: "Орындалуда" },
+        en: { welcome: "Welcome", feed: "Nearby Tasks", create: "New Request", n1: "Feed", n2: "Map", n3: "Create", n4: "Profile", price: "Price", from: "From", take: "Help", publish: "Post", my: "My Tasks", statusOpen: "Open", statusProg: "In Progress" }
     };
 
-    function changeLang(lang, el) {
-        currentLang = lang;
+    function changeLang(l, btn) {
+        curLang = l;
         document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
-        el.classList.add('active');
-        applyTranslations();
+        btn.classList.add('active');
+        updateTexts();
     }
 
-    function applyTranslations() {
-        const t = translations[currentLang];
-        document.getElementById('lblEnterName').innerText = t.lblEnterName;
-        document.getElementById('lblWhoAreYou').innerText = t.lblWhoAreYou;
-        document.getElementById('btnRoleVol').innerText = t.btnRoleVol;
-        document.getElementById('btnRoleCre').innerText = t.btnRoleCre;
-        document.getElementById('btnStart').innerText = t.btnStart;
-        document.getElementById('txtFeedTitle').innerText = t.txtFeedTitle;
-        document.getElementById('txtCreateTitle').innerText = t.txtCreateTitle;
-        document.getElementById('btnPublish').innerText = t.btnPublish;
-        document.getElementById('navHome').innerText = t.navHome;
-        document.getElementById('navCreate').innerText = t.navCreate;
-        document.getElementById('navProfile').innerText = t.navProfile;
-        document.getElementById('btnLogout').innerText = t.btnLogout;
-        document.getElementById('taskTitle').placeholder = t.phTitle;
-        document.getElementById('taskDesc').placeholder = t.phDesc;
-        
-        if(currentUser.name) {
-            document.getElementById('userBadge').innerText = currentUser.role === 'volunteer' ? t.badgeVol : t.badgeCre;
+    function updateTexts() {
+        const t = lang[curLang];
+        document.getElementById('t-welcome').innerText = t.welcome;
+        document.getElementById('t-feed-title').innerText = t.feed;
+        document.getElementById('t-create-title').innerText = t.create;
+        document.getElementById('t-btn-publish').innerText = t.publish;
+        document.getElementById('t-my-tasks').innerText = t.my;
+        document.getElementById('n-home').innerText = t.n1;
+        document.getElementById('n-map').innerText = t.n2;
+        document.getElementById('n-create').innerText = t.n3;
+        document.getElementById('n-profile').innerText = t.n4;
+        renderFeed();
+    }
+
+    function startApp() {
+        user.name = document.getElementById('userName').value || "User";
+        user.role = document.getElementById('userRole').value;
+        document.getElementById('p-name').innerText = user.name;
+        document.getElementById('p-role').innerText = user.role === 'volunteer' ? 'Волонтер' : 'Заказчик';
+        document.getElementById('avatar').innerHTML = `<img src="https://api.dicebear.com/7.x/avataaars/svg?seed=${user.name}" style="width:100%">`;
+        if(user.role === 'volunteer') document.getElementById('navCreateBtn').style.display = 'none';
+        document.getElementById('authScreen').style.display = 'none';
+        document.getElementById('mainApp').style.display = 'block';
+        updateTexts();
+    }
+
+    function pickModule(cat, icon, el) {
+        document.querySelectorAll('.module-item').forEach(i => i.classList.remove('selected'));
+        el.classList.add('selected');
+        selectedModule = { cat, icon };
+    }
+
+    function renderFeed() {
+        const container = document.getElementById('feedContainer');
+        const t = lang[curLang];
+        container.innerHTML = tasks.map(task => `
+            <div class="req-card" onclick="interact(${task.id})">
+                <div class="req-icon">${task.icon}</div>
+                <div style="flex:1">
+                    <div style="font-weight:800; font-size:0.95rem">${task.title}</div>
+                    <div style="font-size:0.75rem; color:var(--text-sub)">${t.from}: ${task.owner}</div>
+                    <div class="price-tag">${task.price} ₸</div>
+                </div>
+                <span class="status-badge" style="background:${task.status==='open'?'#e3f2fd':'#fff3e0'}; color:${task.status==='open'?'#1976d2':'#e65100'}">
+                    ${task.status==='open' ? t.statusOpen : t.statusProg}
+                </span>
+            </div>
+        `).reverse().join('');
+        renderMyTasks();
+    }
+
+    function createTask() {
+        const title = document.getElementById('taskTitle').value;
+        const price = document.getElementById('taskPrice').value;
+        if(!title || !price) return;
+        tasks.push({
+            id: Date.now(), title, price, owner: user.name,
+            cat: selectedModule.cat, icon: selectedModule.icon,
+            status: 'open', lat: 45.015 + (Math.random()-0.5)*0.01, lng: 78.373 + (Math.random()-0.5)*0.01
+        });
+        showScreen('home', document.querySelector('nav div:first-child'));
+        renderFeed();
+    }
+
+    function interact(id) {
+        const task = tasks.find(t => t.id === id);
+        if(user.role === 'volunteer' && task.status === 'open') {
+            task.status = 'in-progress';
+            task.worker = user.name;
+            user.xp += 20;
+            if(user.xp >= 100) { user.level++; user.xp = 0; }
+            updateXpUI();
+            alert("Вы взяли задание! Оно добавлено в профиль.");
+            renderFeed();
         }
     }
 
-    function setRole(role, el) {
-        document.querySelectorAll('.role-btn').forEach(b => b.classList.remove('active'));
-        el.classList.add('active');
-        currentUser.role = role;
+    function updateXpUI() {
+        document.getElementById('xpDisplay').innerText = `LVL ${user.level} • ${user.xp} XP`;
+        document.getElementById('xpBar').style.width = user.xp + "%";
     }
 
-    function handleAuth() {
-        const name = document.getElementById('regName').value;
-        if(!name) return alert(currentLang === 'kz' ? "Есіміңізді жазыңыз" : "Введите имя");
-        
-        currentUser.name = name;
-        document.getElementById('displayProfileName').innerText = name;
-        document.getElementById('profileAvatar').innerHTML = `<img src="https://api.dicebear.com/7.x/avataaars/svg?seed=${name}" style="width:100%">`;
-
-        if(currentUser.role === 'volunteer') document.getElementById('navCreateBtn').style.display = 'none';
-
-        applyTranslations();
-        document.getElementById('authScreen').style.display = 'none';
-        document.getElementById('mainApp').style.display = 'block';
-        renderFeed();
-    }
-
-    let taskData = [{ id: 1, title: "Help with groceries", owner: "Aruzhan" }];
-
-    function renderFeed() {
-        const t = translations[currentLang];
-        const container = document.getElementById('feedContainer');
-        container.innerHTML = taskData.map(task => `
-            <div class="req-card">
-                <div style="font-size:1.5rem">📦</div>
-                <div>
-                    <div style="font-weight:800; font-size:0.9rem">${task.title}</div>
-                    <div style="font-size:0.7rem; color:var(--text-sub)">${t.from}: ${task.owner}</div>
-                </div>
+    function renderMyTasks() {
+        const container = document.getElementById('myTasksContainer');
+        const my = tasks.filter(t => t.owner === user.name || t.worker === user.name);
+        container.innerHTML = my.map(t => `
+            <div class="req-card my-task">
+                <div class="req-icon">${t.icon}</div>
+                <div><div style="font-weight:800">${t.title}</div><div class="price-tag">${t.price} ₸</div></div>
             </div>
-        `).reverse().join('');
-    }
-
-    function createNewTask() {
-        const title = document.getElementById('taskTitle').value;
-        if(!title) return;
-        taskData.push({ id: Date.now(), title: title, owner: currentUser.name });
-        renderFeed();
-        showScreen('home', document.querySelector('nav div:first-child'));
+        `).join('') || '<p style="text-align:center; font-size:0.8rem; color:#999">Список пуст</p>';
     }
 
     function showScreen(id, el) {
@@ -225,8 +257,13 @@
         el.classList.add('active');
     }
 
-    // Инициализация
-    applyTranslations();
+    let map;
+    function initMap() {
+        if (map) map.remove();
+        map = L.map('mapDisplay').setView([45.015, 78.373], 14);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+        tasks.forEach(t => L.marker([t.lat, t.lng]).addTo(map).bindPopup(`<b>${t.title}</b><br>${t.price} ₸`));
+    }
 </script>
 </body>
 </html>
