@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Help Hand MVP</title>
+    <title>Help Hand MVP - Map & Tasks</title>
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
         :root {
             --primary: #4776E6;
             --primary-gradient: linear-gradient(135deg, #4776E6 0%, #8E54E9 100%);
             --success: #00b894;
-            --warning: #fdcb6e;
             --danger: #ff7675;
             --bg: #F8F9FD;
             --card: #FFFFFF;
@@ -22,10 +22,8 @@
         * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body { font-family: 'Manrope', sans-serif; background: var(--bg); color: var(--text-main); overflow-x: hidden; }
 
-        /* App Layout */
         .app-container { max-width: 480px; margin: 0 auto; min-height: 100vh; padding-bottom: 80px; position: relative; }
 
-        /* Header */
         header {
             padding: 20px;
             display: flex;
@@ -34,136 +32,100 @@
             background: var(--bg);
             position: sticky;
             top: 0;
-            z-index: 100;
+            z-index: 1000;
         }
         .logo { font-weight: 800; font-size: 1.4rem; letter-spacing: -1px; background: var(--primary-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
         
-        .lang-pill {
-            background: var(--card);
-            border: 1px solid #eee;
-            border-radius: 20px;
-            padding: 5px 12px;
-            font-size: 0.8rem;
-            font-weight: 600;
-            cursor: pointer;
-            box-shadow: var(--shadow);
-        }
+        .lang-pill { background: var(--card); border: 1px solid #eee; border-radius: 20px; padding: 5px 12px; font-size: 0.8rem; font-weight: 600; cursor: pointer; }
 
-        /* Screens Management */
         .screen { display: none; padding: 0 20px; animation: fadeIn 0.3s ease; }
         .screen.active { display: block; }
+        .screen.full-screen { padding: 0; height: calc(100vh - 140px); } /* Для карты */
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* Profile Card (Gamification) */
+        /* Карта */
+        #mapDisplay { width: 100%; height: 100%; z-index: 1; }
+
+        /* Карточка профиля */
         .user-card {
             background: var(--primary-gradient);
             border-radius: 24px;
-            padding: 25px;
-            color: white;
-            box-shadow: 0 15px 30px rgba(71, 118, 230, 0.3);
-            margin-bottom: 25px;
-        }
-        .user-info { display: flex; align-items: center; gap: 15px; margin-bottom: 20px; }
-        .avatar { width: 60px; height: 60px; border-radius: 50%; border: 3px solid rgba(255,255,255,0.3); overflow: hidden; background: #eee; }
-        .level-tag { background: rgba(255,255,255,0.2); padding: 4px 12px; border-radius: 20px; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; }
-
-        .progress-bar { height: 8px; background: rgba(255,255,255,0.2); border-radius: 4px; margin: 12px 0; overflow: hidden; }
-        .progress-fill { width: 65%; height: 100%; background: white; border-radius: 4px; }
-        .stats-row { display: flex; justify-content: space-between; font-size: 0.8rem; opacity: 0.9; }
-
-        /* Action Buttons */
-        .action-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 30px; }
-        .action-card {
-            background: var(--card);
             padding: 20px;
-            border-radius: 20px;
-            text-align: center;
-            box-shadow: var(--shadow);
-            border: 1px solid rgba(0,0,0,0.02);
-            transition: 0.2s;
+            color: white;
+            box-shadow: 0 15px 30px rgba(71, 118, 230, 0.2);
+            margin-bottom: 20px;
         }
-        .action-card:active { transform: scale(0.95); }
-        .action-card i { font-size: 1.5rem; margin-bottom: 10px; display: block; }
-        .action-card span { font-size: 0.9rem; font-weight: 700; }
+        .user-info { display: flex; align-items: center; gap: 12px; margin-bottom: 15px; }
+        .avatar { width: 50px; height: 50px; border-radius: 50%; border: 2px solid white; overflow: hidden; background: #eee; }
+        .level-tag { background: rgba(255,255,255,0.2); padding: 3px 10px; border-radius: 20px; font-size: 0.65rem; font-weight: 700; }
 
-        /* Badges */
-        .badge-scroll { display: flex; gap: 15px; overflow-x: auto; padding-bottom: 10px; scrollbar-width: none; }
-        .badge-scroll::-webkit-scrollbar { display: none; }
-        .badge-item {
-            min-width: 80px;
-            height: 100px;
-            background: var(--card);
-            border-radius: 18px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            box-shadow: var(--shadow);
-            border: 1px solid #eee;
-        }
-        .badge-item.locked { opacity: 0.4; filter: grayscale(1); }
-        .badge-icon { font-size: 1.8rem; margin-bottom: 5px; }
-        .badge-name { font-size: 0.6rem; font-weight: 700; text-align: center; padding: 0 5px; }
+        .progress-bar { height: 6px; background: rgba(255,255,255,0.2); border-radius: 3px; margin: 10px 0; }
+        .progress-fill { width: 65%; height: 100%; background: white; border-radius: 3px; }
 
-        /* Feed Requests */
-        .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; margin-top: 10px; }
-        .section-header h3 { font-size: 1.1rem; font-weight: 800; }
-        
+        /* Лента заданий */
         .req-card {
             background: var(--card);
-            padding: 15px;
+            padding: 16px;
             border-radius: 20px;
-            margin-bottom: 15px;
+            margin-bottom: 12px;
             display: flex;
             gap: 15px;
             box-shadow: var(--shadow);
-            border: 1px solid rgba(0,0,0,0.01);
+            cursor: pointer;
         }
-        .req-icon { width: 50px; height: 50px; border-radius: 15px; background: #f0f3ff; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; }
+        .req-icon { width: 45px; height: 45px; border-radius: 12px; background: #f0f3ff; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; }
         .req-content { flex: 1; }
         .req-title { font-weight: 700; font-size: 0.9rem; margin-bottom: 4px; }
-        .req-meta { font-size: 0.75rem; color: var(--text-sub); display: flex; gap: 10px; }
-        .status-dot { width: 6px; height: 6px; background: var(--success); border-radius: 50%; display: inline-block; margin-right: 5px; }
+        .req-meta { font-size: 0.7rem; color: var(--text-sub); }
 
-        /* Bottom Nav */
-        nav {
+        /* Модалка */
+        .modal {
             position: fixed;
-            bottom: 0;
-            left: 50%;
-            transform: translateX(-50%);
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 2000;
+            display: none;
+            align-items: flex-end;
+        }
+        .modal-content {
+            background: white;
             width: 100%;
             max-width: 480px;
-            background: rgba(255,255,255,0.9);
+            margin: 0 auto;
+            border-radius: 30px 30px 0 0;
+            padding: 30px 20px;
+            animation: slideUp 0.3s ease;
+        }
+        @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+        
+        .btn-main {
+            background: var(--primary-gradient);
+            color: white;
+            border: none;
+            width: 100%;
+            padding: 15px;
+            border-radius: 15px;
+            font-weight: 700;
+            margin-top: 20px;
+            cursor: pointer;
+        }
+
+        /* Навигация */
+        nav {
+            position: fixed;
+            bottom: 0; left: 50%; transform: translateX(-50%);
+            width: 100%; max-width: 480px;
+            background: rgba(255,255,255,0.95);
             backdrop-filter: blur(10px);
             display: flex;
             justify-content: space-around;
-            padding: 15px 10px 25px;
+            padding: 12px 0 25px;
             border-top: 1px solid #eee;
             z-index: 1000;
         }
-        .nav-link { text-align: center; color: #b2bec3; text-decoration: none; font-size: 0.65rem; font-weight: 700; cursor: pointer; transition: 0.3s; }
+        .nav-link { text-align: center; color: #b2bec3; font-size: 0.65rem; font-weight: 700; cursor: pointer; transition: 0.3s; }
         .nav-link.active { color: var(--primary); }
         .nav-link i { font-size: 1.4rem; display: block; margin-bottom: 4px; }
-
-        /* SOS Button */
-        .sos-btn {
-            position: fixed;
-            right: 20px;
-            bottom: 100px;
-            width: 60px;
-            height: 60px;
-            background: var(--danger);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-weight: 800;
-            box-shadow: 0 10px 20px rgba(255, 118, 117, 0.4);
-            cursor: pointer;
-            z-index: 99;
-            border: 4px solid white;
-        }
     </style>
 </head>
 <body>
@@ -178,210 +140,133 @@
         </select>
     </header>
 
-    <div class="sos-btn">SOS</div>
-
     <div id="home" class="screen active">
         <div class="user-card">
             <div class="user-info">
-                <div class="avatar"><img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Nurasyl" alt="avatar" style="width:100%"></div>
+                <div class="avatar"><img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Nurasyl" style="width:100%"></div>
                 <div>
                     <h2 id="userName">Нурасыл</h2>
-                    <span class="level-tag" id="lvlTag">Уровень 4: Герой</span>
+                    <span class="level-tag" id="lvlTag">Герой • LVL 4</span>
                 </div>
             </div>
-            <div class="progress-bar"><div class="progress-fill" id="progFill"></div></div>
-            <div class="stats-row">
-                <span id="karmaScore">1,240 XP</span>
-                <span id="nextLvl">2,000 XP</span>
+            <div class="progress-bar"><div class="progress-fill"></div></div>
+            <div style="display:flex; justify-content:space-between; font-size:0.7rem; opacity:0.8">
+                <span>1,240 XP</span>
+                <span id="txtNextLvl">До след. уровня 760 XP</span>
             </div>
         </div>
 
-        <div class="action-grid">
-            <div class="action-card">
-                <i>➕</i>
-                <span id="btnCreate">Создать</span>
-            </div>
-            <div class="action-card">
-                <i>💎</i>
-                <span id="btnStore">Магазин</span>
-            </div>
-        </div>
+        <h3 id="txtFeed" style="margin-bottom:15px; font-weight:800;">Задания рядом</h3>
+        <div id="feedContainer"></div>
+    </div>
 
-        <div class="section-header">
-            <h3 id="txtBadges">Бейджи</h3>
-            <span style="color:var(--primary); font-size:0.8rem; font-weight:700" id="btnAll">Все</span>
-        </div>
-        
-        <div class="badge-scroll" id="badgeContainer">
-            </div>
-
-        <div class="section-header" style="margin-top: 25px;">
-            <h3 id="txtFeed">Помощь рядом</h3>
-        </div>
-
-        <div id="feedContainer">
-            </div>
+    <div id="map" class="screen full-screen">
+        <div id="mapDisplay"></div>
     </div>
 
     <div id="profile" class="screen">
-        <h2 style="padding: 20px;" id="profileTitle">Профиль пользователя</h2>
-    </div>
-
-    <div id="map" class="screen">
-        <h2 style="padding: 20px;" id="mapTitle">Карта добрых дел</h2>
+        <div style="text-align:center; padding-top:40px;">
+            <div class="avatar" style="width:100px; height:100px; margin: 0 auto 20px; border: 4px solid var(--primary);">
+                <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Nurasyl" style="width:100%">
+            </div>
+            <h2 id="profileName">Нурасыл Шарипов</h2>
+            <p style="color:var(--text-sub)" id="profileStatus">Талдыкорган, IT School-Lyceum №28</p>
+        </div>
     </div>
 
     <nav>
-        <div class="nav-link active" onclick="showScreen('home', this)">
-            <i>🏠</i><span id="navHome">Главная</span>
-        </div>
-        <div class="nav-link" onclick="showScreen('map', this)">
-            <i>📍</i><span id="navMap">Карта</span>
-        </div>
-        <div class="nav-link" onclick="showScreen('profile', this)">
-            <i>👤</i><span id="navProfile">Профиль</span>
-        </div>
+        <div class="nav-link active" onclick="showScreen('home', this)"><i>🏠</i><span id="navHome">Главная</span></div>
+        <div class="nav-link" onclick="showScreen('map', this); initMap();"><i>📍</i><span id="navMap">Карта</span></div>
+        <div class="nav-link" onclick="showScreen('profile', this)"><i>👤</i><span id="navProfile">Профиль</span></div>
     </nav>
 </div>
 
+<div id="taskModal" class="modal" onclick="closeModal(event)">
+    <div class="modal-content" onclick="event.stopPropagation()">
+        <div style="display:flex; gap:15px; align-items:center; margin-bottom:20px;">
+            <div id="modalIcon" class="req-icon">🤝</div>
+            <div>
+                <h2 id="modalTitle" style="font-size:1.2rem;">Задание</h2>
+                <p id="modalDist" style="font-size:0.8rem; color:var(--text-sub)">Расстояние</p>
+            </div>
+        </div>
+        <p id="modalDesc" style="color:var(--text-main); line-height:1.4;">Детальное описание задания появится здесь...</p>
+        <button class="btn-main" id="btnAccept" onclick="alert('Вы приняли задание! Удачи!')">Откликнуться</button>
+    </div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
-    const data = {
-        ru: {
-            userName: "Нурасыл",
-            lvlTag: "Уровень 4: Герой",
-            karmaScore: "1,240 XP",
-            nextLvl: "2,000 XP до след.",
-            btnCreate: "Попросить",
-            btnStore: "Бонусы",
-            txtBadges: "Достижения",
-            btnAll: "Все",
-            txtFeed: "Помощь рядом",
-            navHome: "Главная",
-            navMap: "Карта",
-            navProfile: "Профиль",
-            profileTitle: "Ваш профиль",
-            mapTitle: "Талдыкорган: Карта",
-            badges: [
-                { i: "🛡️", n: "Проверен", l: false },
-                { i: "⚡", n: "Скорость", l: false },
-                { i: "🤝", n: "Друг", l: false },
-                { i: "🔥", n: "Актив", l: true }
-            ],
-            feed: [
-                { t: "Вынести мусор (6 этаж)", d: "150м от вас", c: "Быт" },
-                { t: "Сходить в аптеку", d: "400м от вас", c: "Здоровье" }
-            ]
-        },
-        kz: {
-            userName: "Нұрасыл",
-            lvlTag: "4 деңгей: Батыр",
-            karmaScore: "1,240 XP",
-            nextLvl: "Келесіге 2,000 XP",
-            btnCreate: "Көмек сұрау",
-            btnStore: "Бонустар",
-            txtBadges: "Жетістіктер",
-            btnAll: "Барлығы",
-            txtFeed: "Жақын маңдағы көмек",
-            navHome: "Басты бет",
-            navMap: "Карта",
-            navProfile: "Профиль",
-            profileTitle: "Сіздің профиліңіз",
-            mapTitle: "Талдықорған: Карта",
-            badges: [
-                { i: "🛡️", n: "Расталған", l: false },
-                { i: "⚡", n: "Жылдам", l: false },
-                { i: "🤝", n: "Дос", l: false },
-                { i: "🔥", n: "Белсенді", l: true }
-            ],
-            feed: [
-                { t: "Қоқыс шығару (6 қабат)", d: "150м қашықтықта", c: "Тұрмыс" },
-                { t: "Дәріханаға бару", d: "400м қашықтықта", c: "Денсаулық" }
-            ]
-        },
-        en: {
-            userName: "Nurasyl",
-            lvlTag: "Level 4: Hero",
-            karmaScore: "1,240 XP",
-            nextLvl: "2,000 XP next",
-            btnCreate: "Ask Help",
-            btnStore: "Store",
-            txtBadges: "Badges",
-            btnAll: "View All",
-            txtFeed: "Nearby Requests",
-            navHome: "Home",
-            navMap: "Map",
-            navProfile: "Profile",
-            profileTitle: "User Profile",
-            mapTitle: "City Map",
-            badges: [
-                { i: "🛡️", n: "Verified", l: false },
-                { i: "⚡", n: "Fast", l: false },
-                { i: "🤝", n: "Friend", l: false },
-                { i: "🔥", n: "Active", l: true }
-            ],
-            feed: [
-                { t: "Take out trash (6th fl)", d: "150m away", c: "Home" },
-                { t: "Pharmacy visit", d: "400m away", c: "Health" }
-            ]
-        }
+    let map;
+    const taskData = [
+        { id: 1, lat: 45.015, lng: 78.373, cat: "Быт", ru: "Вынести мусор", kz: "Қоқыс шығару", en: "Take out trash", desc: "6 этаж, лифт не работает, нужна помощь пожилому человеку.", icon: "🗑️" },
+        { id: 2, lat: 45.018, lng: 78.378, cat: "Здоровье", ru: "Купить лекарства", kz: "Дәрі сатып алу", en: "Buy medicine", desc: "Нужен аспирин и витамины. Аптека в этом же доме.", icon: "💊" },
+        { id: 3, lat: 45.012, lng: 78.365, cat: "Транспорт", ru: "Помочь с сумками", kz: "Сөмкеге көмек", en: "Help with bags", desc: "Помочь донести тяжелые сумки от остановки до подъезда.", icon: "🛍️" }
+    ];
+
+    const uiLang = {
+        ru: { navHome: "Главная", navMap: "Карта", navProfile: "Профиль", txtFeed: "Задания рядом", txtNextLvl: "До след. уровня 760 XP", btnAccept: "Откликнуться" },
+        kz: { navHome: "Басты бет", navMap: "Карта", navProfile: "Профиль", txtFeed: "Тапсырмалар", txtNextLvl: "Келесі деңгейге 760 XP", btnAccept: "Көмектесу" },
+        en: { navHome: "Home", navMap: "Map", navProfile: "Profile", txtFeed: "Tasks Nearby", txtNextLvl: "760 XP to next level", btnAccept: "Accept Task" }
     };
 
     function updateLang() {
         const lang = document.getElementById('langSwitcher').value;
-        const t = data[lang];
-
-        // Update Text
-        document.getElementById('userName').innerText = t.userName;
-        document.getElementById('lvlTag').innerText = t.lvlTag;
-        document.getElementById('karmaScore').innerText = t.karmaScore;
-        document.getElementById('nextLvl').innerText = t.nextLvl;
-        document.getElementById('btnCreate').innerText = t.btnCreate;
-        document.getElementById('btnStore').innerText = t.btnStore;
-        document.getElementById('txtBadges').innerText = t.txtBadges;
-        document.getElementById('btnAll').innerText = t.btnAll;
-        document.getElementById('txtFeed').innerText = t.txtFeed;
+        const t = uiLang[lang];
+        
         document.getElementById('navHome').innerText = t.navHome;
         document.getElementById('navMap').innerText = t.navMap;
         document.getElementById('navProfile').innerText = t.navProfile;
-        document.getElementById('profileTitle').innerText = t.profileTitle;
-        document.getElementById('mapTitle').innerText = t.mapTitle;
+        document.getElementById('txtFeed').innerText = t.txtFeed;
+        document.getElementById('txtNextLvl').innerText = t.txtNextLvl;
+        document.getElementById('btnAccept').innerText = t.btnAccept;
 
-        // Render Badges
-        const bCont = document.getElementById('badgeContainer');
-        bCont.innerHTML = t.badges.map(b => `
-            <div class="badge-item ${b.l ? 'locked' : ''}">
-                <span class="badge-icon">${b.i}</span>
-                <span class="badge-name">${b.n}</span>
-            </div>
-        `).join('');
+        renderFeed(lang);
+    }
 
-        // Render Feed
-        const fCont = document.getElementById('feedContainer');
-        fCont.innerHTML = t.feed.map(f => `
-            <div class="req-card">
-                <div class="req-icon">🤝</div>
+    function renderFeed(lang) {
+        const container = document.getElementById('feedContainer');
+        container.innerHTML = taskData.map(task => `
+            <div class="req-card" onclick="openTask(${task.id})">
+                <div class="req-icon">${task.icon}</div>
                 <div class="req-content">
-                    <div class="req-title">${f.t}</div>
-                    <div class="req-meta">
-                        <span><span class="status-dot"></span>${f.c}</span>
-                        <span>📍 ${f.d}</span>
-                    </div>
+                    <div class="req-title">${task[lang]}</div>
+                    <div class="req-meta">${task.cat} • ~300м</div>
                 </div>
             </div>
         `).join('');
     }
 
+    function openTask(id) {
+        const lang = document.getElementById('langSwitcher').value;
+        const task = taskData.find(t => t.id === id);
+        document.getElementById('modalTitle').innerText = task[lang];
+        document.getElementById('modalDesc').innerText = task.desc;
+        document.getElementById('modalIcon').innerText = task.icon;
+        document.getElementById('taskModal').style.display = 'flex';
+    }
+
+    function closeModal(e) { document.getElementById('taskModal').style.display = 'none'; }
+
     function showScreen(screenId, navEl) {
         document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
         document.getElementById(screenId).classList.add('active');
-        
         document.querySelectorAll('.nav-link').forEach(n => n.classList.remove('active'));
         navEl.classList.add('active');
-        
-        window.scrollTo(0, 0);
     }
 
-    // Start
+    function initMap() {
+        if (map) return;
+        // Координаты Талдыкоргана
+        map = L.map('mapDisplay').setView([45.015, 78.373], 14);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+
+        taskData.forEach(task => {
+            const marker = L.marker([task.lat, task.lng]).addTo(map);
+            marker.on('click', () => openTask(task.id));
+        });
+    }
+
     updateLang();
 </script>
 
